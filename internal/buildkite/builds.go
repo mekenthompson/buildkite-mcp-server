@@ -10,6 +10,7 @@ import (
 	"github.com/buildkite/go-buildkite/v4"
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
+	"github.com/wolfeidau/buildkite-mcp-server/pkg/applog"
 )
 
 func ListBuilds(ctx context.Context, client *buildkite.Client) (tool mcp.Tool, handler server.ToolHandlerFunc) {
@@ -40,6 +41,8 @@ func ListBuilds(ctx context.Context, client *buildkite.Client) (tool mcp.Tool, h
 			if err != nil {
 				return mcp.NewToolResultError(err.Error()), nil
 			}
+
+			applog.Ctx(ctx).Debug("List builds", "org", org, "pipeline_slug", pipelineSlug, "pagination", paginationParams)
 
 			builds, resp, err := client.Builds.ListByPipeline(ctx, org, pipelineSlug, &buildkite.BuildsListOptions{
 				ListOptions: paginationParams,

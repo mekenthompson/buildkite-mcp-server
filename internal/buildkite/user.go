@@ -8,6 +8,7 @@ import (
 	"github.com/buildkite/go-buildkite/v4"
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
+	"github.com/wolfeidau/buildkite-mcp-server/pkg/applog"
 )
 
 type UserClient interface {
@@ -18,6 +19,9 @@ func CurrentUser(ctx context.Context, client UserClient) (tool mcp.Tool, handler
 	return mcp.NewTool("current_user",
 			mcp.WithDescription("Get the current user"),
 		), func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+
+			applog.Ctx(ctx).Debug("Get current user")
+
 			user, resp, err := client.CurrentUser(ctx)
 			if err != nil {
 				return mcp.NewToolResultError(err.Error()), nil

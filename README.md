@@ -20,6 +20,16 @@ Example of the `get_pipeline` tool in action.
 * [goreleaser](http://goreleaser.com)
 * [go 1.24](https://go.dev)
 
+# Troubleshooting 
+
+Logs for the Buildkite MCP server are stored in the platform-specific directory:
+
+* macOS: ~/Library/Application Support/buildkite-mcp-server/logs/
+* Windows: %APPDATA%\buildkite-mcp-server\logs\
+* Linux: ~/.config/buildkite-mcp-server/logs/
+
+The name of the log file is generated from the template `{{hostname}}_{{username}}_{{timestamp:2006-01-02}}_pid{{pid}}.log` so the files are unique for different mcp servers.
+
 # building
 
 Build the binary.
