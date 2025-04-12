@@ -23,6 +23,7 @@ func (c *StdioCmd) Run(ctx context.Context, globals *Globals) error {
 	s.AddTool(buildkite.ListBuilds(ctx, globals.Client))
 	s.AddTool(buildkite.GetBuild(ctx, globals.Client))
 	s.AddTool(buildkite.CurrentUser(ctx, globals.Client.User))
+	s.AddTool(buildkite.GetJobLogs(ctx, globals.Client))
 
 	return server.ServeStdio(s)
 }
