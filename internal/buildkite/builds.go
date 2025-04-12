@@ -10,6 +10,7 @@ import (
 	"github.com/buildkite/go-buildkite/v4"
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
+	"github.com/rs/zerolog/log"
 )
 
 func ListBuilds(ctx context.Context, client *buildkite.Client) (tool mcp.Tool, handler server.ToolHandlerFunc) {
@@ -41,6 +42,12 @@ func ListBuilds(ctx context.Context, client *buildkite.Client) (tool mcp.Tool, h
 				return mcp.NewToolResultError(err.Error()), nil
 			}
 
+			log.Ctx(ctx).Debug().Fields(map[string]any{
+				"org":           org,
+				"pipeline_slug": pipelineSlug,
+				"pagination":    paginationParams,
+			}).Msg("Listing builds")
+
 			builds, resp, err := client.Builds.ListByPipeline(ctx, org, pipelineSlug, &buildkite.BuildsListOptions{
 				ListOptions: paginationParams,
 			})
@@ -58,7 +65,7 @@ func ListBuilds(ctx context.Context, client *buildkite.Client) (tool mcp.Tool, h
 
 			r, err := json.Marshal(&builds)
 			if err != nil {
-				return nil, fmt.Errorf("failed to marshal issue: %w", err)
+				return nil, fmt.Errorf("failed to marshal builds: %w", err)
 			}
 
 			return mcp.NewToolResultText(string(r)), nil

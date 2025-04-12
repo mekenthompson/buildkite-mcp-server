@@ -2,11 +2,12 @@ package main
 
 import (
 	"context"
-	"log"
+	"os"
 
 	"github.com/alecthomas/kong"
 	"github.com/buildkite/buildkite-mcp-server/internal/commands"
 	"github.com/buildkite/go-buildkite/v4"
+	"github.com/rs/zerolog"
 )
 
 var (
@@ -22,6 +23,7 @@ var (
 
 func main() {
 	ctx := context.Background()
+
 	cmd := kong.Parse(&cli,
 		kong.Name("buildkite-mcp-server"),
 		kong.Description("A server that proxies requests to the Buildkite API."),
@@ -32,11 +34,17 @@ func main() {
 		kong.BindTo(ctx, (*context.Context)(nil)),
 	)
 
-	client, err := buildkite.NewOpts(buildkite.WithTokenAuth(cli.APIToken))
-	if err != nil {
-		log.Fatal(err)
+	logger := zerolog.New(os.Stderr).With().Timestamp().Logger()
+
+	if cli.Debug {
+		logger = logger.Level(zerolog.DebugLevel).With().Caller().Logger()
 	}
 
-	err = cmd.Run(&commands.Globals{Debug: cli.Debug, Version: version, Client: client})
+	client, err := buildkite.NewOpts(buildkite.WithTokenAuth(cli.APIToken))
+	if err != nil {
+		logger.Fatal().Err(err).Msg("failed to create buildkite client")
+	}
+
+	err = cmd.Run(&commands.Globals{Version: version, Client: client, Logger: logger})
 	cmd.FatalIfErrorf(err)
 }
