@@ -5,8 +5,8 @@ import (
 	"log"
 
 	"github.com/alecthomas/kong"
+	"github.com/buildkite/buildkite-mcp-server/internal/commands"
 	"github.com/buildkite/go-buildkite/v4"
-	"github.com/wolfeidau/buildkite-mcp-server/internal/commands"
 )
 
 var (

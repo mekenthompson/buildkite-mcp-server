@@ -3,8 +3,8 @@ package commands
 import (
 	"context"
 
+	"github.com/buildkite/buildkite-mcp-server/internal/buildkite"
 	"github.com/mark3labs/mcp-go/server"
-	"github.com/wolfeidau/buildkite-mcp-server/internal/buildkite"
 )
 
 type StdioCmd struct {
