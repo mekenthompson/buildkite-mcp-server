@@ -62,6 +62,8 @@ extensions:
     timeout: 300
 ```
 
+YAML configuration is required by [Goose](https://block.github.io/goose/).
+
 
 ## Disclaimer
 
