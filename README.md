@@ -50,6 +50,20 @@ Create a buildkite api token with read access to pipelines.
 }
 ```
 
+```yaml
+extensions:
+  fetch:
+    name: Buildkite
+    cmd: buildkite-mcp-server
+    args: [stdio]
+    enabled: true
+    envs: { "BUILDKITE_API_TOKEN": "bkua_xxxxxxxx" }
+    type: stdio
+    timeout: 300
+```
+
+YAML configuration is required by [Goose](https://block.github.io/goose/).
+
 
 ## Disclaimer
 
