@@ -1,4 +1,4 @@
-module github.com/wolfeidau/buildkite-mcp-server
+module github.com/buildkite/buildkite-mcp-server
 
 go 1.24.2
 
