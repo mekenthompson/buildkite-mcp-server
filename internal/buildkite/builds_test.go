@@ -20,6 +20,7 @@ func (m *MockBuildsClient) Get(ctx context.Context, org string, pipeline string,
 	}
 	return buildkite.Build{}, nil, nil
 }
+
 func (m *MockBuildsClient) ListByPipeline(ctx context.Context, org string, pipeline string, opt *buildkite.BuildsListOptions) ([]buildkite.Build, *buildkite.Response, error) {
 	if m.ListByPipelineFunc != nil {
 		return m.ListByPipelineFunc(ctx, org, pipeline, opt)

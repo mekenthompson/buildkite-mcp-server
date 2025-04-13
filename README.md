@@ -9,7 +9,10 @@ This is an [Model Context Protocol (MCP)](https://modelcontextprotocol.io/introd
 * `get_pipeline` - Get details of a specific pipeline in Buildkite
 * `list_pipelines` - List all pipelines in a buildkite organization
 * `list_builds` - List all builds in a pipeline in Buildkite
-* `list_pipelines` - List all pipelines in a buildkite organization
+* `get_job_logs` - Get logs for a specific job in Buildkite
+* `list_artifacts` - List all artifacts for a specific job in Buildkite
+* `get_artifact` - Get a specific artifact for a specific job in Buildkite
+* `current_user` - Get details of the current user in Buildkite
 
 Example of the `get_pipeline` tool in action.
 
