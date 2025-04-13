@@ -13,7 +13,12 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func ListPipeline(ctx context.Context, client *buildkite.Client) (tool mcp.Tool, handler server.ToolHandlerFunc) {
+type PipelinesClient interface {
+	Get(ctx context.Context, org, pipelineSlug string) (buildkite.Pipeline, *buildkite.Response, error)
+	List(ctx context.Context, org string, options *buildkite.PipelineListOptions) ([]buildkite.Pipeline, *buildkite.Response, error)
+}
+
+func ListPipelines(ctx context.Context, client PipelinesClient) (tool mcp.Tool, handler server.ToolHandlerFunc) {
 	return mcp.NewTool("list_pipelines",
 			mcp.WithDescription("List all pipelines in a buildkite organization"),
 			mcp.WithString("org",
@@ -37,7 +42,7 @@ func ListPipeline(ctx context.Context, client *buildkite.Client) (tool mcp.Tool,
 				"pagination": paginationParams,
 			}).Msg("Listing pipelines")
 
-			pipelines, resp, err := client.Pipelines.List(ctx, org, &buildkite.PipelineListOptions{
+			pipelines, resp, err := client.List(ctx, org, &buildkite.PipelineListOptions{
 				ListOptions: paginationParams,
 			})
 			if err != nil {
@@ -61,7 +66,7 @@ func ListPipeline(ctx context.Context, client *buildkite.Client) (tool mcp.Tool,
 		}
 }
 
-func GetPipeline(ctx context.Context, client *buildkite.Client) (tool mcp.Tool, handler server.ToolHandlerFunc) {
+func GetPipeline(ctx context.Context, client PipelinesClient) (tool mcp.Tool, handler server.ToolHandlerFunc) {
 	return mcp.NewTool("get_pipeline",
 			mcp.WithDescription("Get details of a specific pipeline in Buildkite"),
 			mcp.WithString("org",
@@ -84,7 +89,7 @@ func GetPipeline(ctx context.Context, client *buildkite.Client) (tool mcp.Tool, 
 				return mcp.NewToolResultError(err.Error()), nil
 			}
 
-			pipeline, resp, err := client.Pipelines.Get(ctx, org, pipelineSlug)
+			pipeline, resp, err := client.Get(ctx, org, pipelineSlug)
 			if err != nil {
 				return mcp.NewToolResultError(err.Error()), nil
 			}

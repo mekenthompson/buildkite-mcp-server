@@ -22,10 +22,10 @@ func (c *StdioCmd) Run(ctx context.Context, globals *Globals) error {
 
 	log.Ctx(ctx).Info().Str("version", globals.Version).Msg("Starting Buildkite MCP server")
 
-	s.AddTool(buildkite.GetPipeline(ctx, globals.Client))
-	s.AddTool(buildkite.ListPipeline(ctx, globals.Client))
-	s.AddTool(buildkite.ListBuilds(ctx, globals.Client))
-	s.AddTool(buildkite.GetBuild(ctx, globals.Client))
+	s.AddTool(buildkite.GetPipeline(ctx, globals.Client.Pipelines))
+	s.AddTool(buildkite.ListPipelines(ctx, globals.Client.Pipelines))
+	s.AddTool(buildkite.ListBuilds(ctx, globals.Client.Builds))
+	s.AddTool(buildkite.GetBuild(ctx, globals.Client.Builds))
 	s.AddTool(buildkite.CurrentUser(ctx, globals.Client.User))
 	s.AddTool(buildkite.GetJobLogs(ctx, globals.Client))
 	s.AddTool(buildkite.AccessToken(ctx, globals.Client.AccessTokens))
