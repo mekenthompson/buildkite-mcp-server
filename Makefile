@@ -4,6 +4,11 @@ PHONY: build
 build:
 	go build -o buildkite-mcp-server ./cmd/buildkite-mcp-server/main.go
 
+PHONY: install
+install:
+	go install ./cmd/...
+
+.PHONY: snapshot
 snapshot:
 	goreleaser build --snapshot --clean  --single-target
 
