@@ -8,5 +8,6 @@ WORKDIR /app
 # Copy the binary built by GoReleaser
 COPY buildkite-mcp-server /app/
 
-# Set the entrypoint to run the server in stdio mode
-ENTRYPOINT ["/app/buildkite-mcp-server", "stdio"]
+# Set the entrypoint to run the server 
+ENTRYPOINT ["/app/buildkite-mcp-server"] 
+CMD ["stdio"]
