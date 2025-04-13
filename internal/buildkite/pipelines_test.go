@@ -20,6 +20,7 @@ func (m *MockPipelinesClient) Get(ctx context.Context, org string, pipeline stri
 	}
 	return buildkite.Pipeline{}, nil, nil
 }
+
 func (m *MockPipelinesClient) List(ctx context.Context, org string, opt *buildkite.PipelineListOptions) ([]buildkite.Pipeline, *buildkite.Response, error) {
 	if m.ListFunc != nil {
 		return m.ListFunc(ctx, org, opt)
@@ -64,6 +65,7 @@ func TestListPipelines(t *testing.T) {
 
 	assert.Equal(`[{"id":"123","name":"Test Pipeline","slug":"test-pipeline","created_at":"0001-01-01T00:00:00Z","provider":{"id":"","webhook_url":"","settings":null}}]`, textContent.Text)
 }
+
 func TestGetPipeline(t *testing.T) {
 	assert := require.New(t)
 

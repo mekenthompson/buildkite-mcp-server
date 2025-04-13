@@ -19,7 +19,6 @@ func CurrentUser(ctx context.Context, client UserClient) (tool mcp.Tool, handler
 	return mcp.NewTool("current_user",
 			mcp.WithDescription("Get the current user"),
 		), func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-
 			log.Ctx(ctx).Debug().Msg("Getting current user")
 
 			user, resp, err := client.CurrentUser(ctx)

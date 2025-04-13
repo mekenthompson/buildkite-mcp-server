@@ -11,6 +11,8 @@ import (
 type StdioCmd struct{}
 
 func (c *StdioCmd) Run(ctx context.Context, globals *Globals) error {
+	// Create a client adapter so that we can use a mock or true client
+	clientAdapter := &buildkite.BuildkiteClientAdapter{Client: globals.Client}
 	s := server.NewMCPServer(
 		"github-mcp-server",
 		globals.Version,
@@ -29,6 +31,9 @@ func (c *StdioCmd) Run(ctx context.Context, globals *Globals) error {
 	s.AddTool(buildkite.CurrentUser(ctx, globals.Client.User))
 	s.AddTool(buildkite.GetJobLogs(ctx, globals.Client))
 	s.AddTool(buildkite.AccessToken(ctx, globals.Client.AccessTokens))
+
+	s.AddTool(buildkite.ListArtifacts(ctx, clientAdapter))
+	s.AddTool(buildkite.GetArtifact(ctx, clientAdapter))
 
 	return server.ServeStdio(s)
 }
