@@ -13,7 +13,12 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func ListBuilds(ctx context.Context, client *buildkite.Client) (tool mcp.Tool, handler server.ToolHandlerFunc) {
+type BuildsClient interface {
+	Get(ctx context.Context, org, pipelineSlug, buildNumber string, options *buildkite.BuildsListOptions) (buildkite.Build, *buildkite.Response, error)
+	ListByPipeline(ctx context.Context, org, pipelineSlug string, options *buildkite.BuildsListOptions) ([]buildkite.Build, *buildkite.Response, error)
+}
+
+func ListBuilds(ctx context.Context, client BuildsClient) (tool mcp.Tool, handler server.ToolHandlerFunc) {
 	return mcp.NewTool("list_builds",
 			mcp.WithDescription("List all builds in a pipeline in Buildkite"),
 			mcp.WithString("org",
@@ -48,7 +53,7 @@ func ListBuilds(ctx context.Context, client *buildkite.Client) (tool mcp.Tool, h
 				"pagination":    paginationParams,
 			}).Msg("Listing builds")
 
-			builds, resp, err := client.Builds.ListByPipeline(ctx, org, pipelineSlug, &buildkite.BuildsListOptions{
+			builds, resp, err := client.ListByPipeline(ctx, org, pipelineSlug, &buildkite.BuildsListOptions{
 				ListOptions: paginationParams,
 			})
 			if err != nil {
@@ -72,7 +77,7 @@ func ListBuilds(ctx context.Context, client *buildkite.Client) (tool mcp.Tool, h
 		}
 }
 
-func GetBuild(ctx context.Context, client *buildkite.Client) (tool mcp.Tool, handler server.ToolHandlerFunc) {
+func GetBuild(ctx context.Context, client BuildsClient) (tool mcp.Tool, handler server.ToolHandlerFunc) {
 	return mcp.NewTool("get_build",
 			mcp.WithDescription("Get a build in Buildkite"),
 			mcp.WithString("org",
@@ -104,7 +109,7 @@ func GetBuild(ctx context.Context, client *buildkite.Client) (tool mcp.Tool, han
 				return mcp.NewToolResultError(err.Error()), nil
 			}
 
-			build, resp, err := client.Builds.Get(ctx, org, pipelineSlug, buildNumber, &buildkite.BuildsListOptions{})
+			build, resp, err := client.Get(ctx, org, pipelineSlug, buildNumber, &buildkite.BuildsListOptions{})
 			if err != nil {
 				return mcp.NewToolResultError(err.Error()), nil
 			}
