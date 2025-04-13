@@ -26,3 +26,4 @@ services:
       - ~/gocache:/gocache
       - ~/gomodcache:/gomodcache      
       - ${BUILDKITE_AGENT_JOB_API_SOCKET}:${BUILDKITE_AGENT_JOB_API_SOCKET}
+      - /var/run/docker.sock:/var/run/docker.sock
