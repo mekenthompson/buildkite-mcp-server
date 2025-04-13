@@ -18,39 +18,6 @@ Example of the `get_pipeline` tool in action.
 
 ![Get Pipeline Tool](docs/images/get_pipeline.png)
 
-# prerequisites
-
-* [goreleaser](http://goreleaser.com)
-* [go 1.24](https://go.dev)
-
-# building
-
-## Local Build
-
-Build the binary locally.
-
-```bash
-make build
-```
-
-Copy it to your path.
-
-## Docker
-
-### Local Development
-
-Build the Docker image using the local development Dockerfile:
-
-```bash
-docker build -t buildkite/buildkite-mcp-server:dev -f Dockerfile.local .
-```
-
-Run the container:
-
-```bash
-docker run -i --rm -e BUILDKITE_API_TOKEN="your-token" buildkite/buildkite-mcp-server:dev
-```
-
 ### Production
 
 Pull the pre-built image (once published):
@@ -141,6 +108,10 @@ extensions:
     type: stdio
     timeout: 300
 ```
+
+# Contributing
+
+Notes on building this project are in the [Development.md](Development.md)
 
 
 ## Disclaimer
