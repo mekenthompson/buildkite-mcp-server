@@ -22,17 +22,51 @@ Example of the `get_pipeline` tool in action.
 
 # building
 
-Build the binary.
+## Local Build
 
-```
+Build the binary locally.
+
+```bash
 make build
 ```
 
 Copy it to your path.
 
+## Docker
+
+### Local Development
+
+Build the Docker image using the local development Dockerfile:
+
+```bash
+docker build -t buildkite/buildkite-mcp-server:dev -f Dockerfile.local .
+```
+
+Run the container:
+
+```bash
+docker run -i --rm -e BUILDKITE_API_TOKEN="your-token" buildkite/buildkite-mcp-server:dev
+```
+
+### Production
+
+Pull the pre-built image (once published):
+
+```bash
+docker pull buildkite/buildkite-mcp-server
+```
+
+Or build it yourself using GoReleaser:
+
+```bash
+goreleaser build --snapshot --clean
+```
+
 # configuration
 
 Create a buildkite api token with read access to pipelines.
+
+## Local Installation
 
 ```json
 {
@@ -50,6 +84,35 @@ Create a buildkite api token with read access to pipelines.
 }
 ```
 
+## Docker Configuration
+
+Use this configuration if you want to run the server using Docker:
+
+```json
+{
+    "mcpServers": {
+        "buildkite": {
+            "command": "docker",
+            "args": [
+                "run",
+                "-i",
+                "--rm",
+                "-e",
+                "BUILDKITE_API_TOKEN",
+                "buildkite/buildkite-mcp-server"
+            ],
+            "env": {
+                "BUILDKITE_API_TOKEN": "bkua_xxxxxxxx"
+            }
+        }
+    }
+}
+```
+
+## Goose Configuration
+
+YAML configuration for [Goose](https://block.github.io/goose/):
+
 ```yaml
 extensions:
   fetch:
@@ -62,7 +125,19 @@ extensions:
     timeout: 300
 ```
 
-YAML configuration is required by [Goose](https://block.github.io/goose/).
+For Docker with Goose:
+
+```yaml
+extensions:
+  fetch:
+    name: Buildkite
+    cmd: docker
+    args: ["run", "-i", "--rm", "-e", "BUILDKITE_API_TOKEN", "buildkite/buildkite-mcp-server"]
+    enabled: true
+    envs: { "BUILDKITE_API_TOKEN": "bkua_xxxxxxxx" }
+    type: stdio
+    timeout: 300
+```
 
 
 ## Disclaimer
