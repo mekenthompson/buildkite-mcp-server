@@ -54,7 +54,7 @@ func ListPipeline(ctx context.Context, client *buildkite.Client) (tool mcp.Tool,
 
 			r, err := json.Marshal(&pipelines)
 			if err != nil {
-				return nil, fmt.Errorf("failed to marshal issue: %w", err)
+				return nil, fmt.Errorf("failed to marshal pipelines: %w", err)
 			}
 
 			return mcp.NewToolResultText(string(r)), nil

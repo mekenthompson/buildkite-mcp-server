@@ -68,7 +68,7 @@ func GetJobLogs(ctx context.Context, client *buildkite.Client) (tool mcp.Tool, h
 
 			r, err := json.Marshal(joblog)
 			if err != nil {
-				return nil, fmt.Errorf("failed to marshal issue: %w", err)
+				return nil, fmt.Errorf("failed to marshal job logs: %w", err)
 			}
 
 			return mcp.NewToolResultText(string(r)), nil
