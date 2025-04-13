@@ -2,10 +2,10 @@ FROM public.ecr.aws/docker/library/golang:1.24.2@sha256:1ecc479bc712a6bdb56df3e3
 
 COPY --from=goreleaser/goreleaser-pro:v2.8.2@sha256:62bff5f26c37e1615265ae9c1106fbabc427882fd442c67a89db4c513d31b326 /usr/bin/goreleaser /usr/local/bin/goreleaser
 
-# Install Docker CLI for GoReleaser
-RUN apt-get update && \
-    apt-get install -y apt-transport-https ca-certificates curl gnupg lsb-release && \
-    curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg && \
-    echo "deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/debian $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null && \
-    apt-get update && \
-    apt-get install -y docker-ce-cli
+# # Install Docker CLI for GoReleaser
+# RUN apt-get update && \
+#     apt-get install -y apt-transport-https ca-certificates curl gnupg lsb-release && \
+#     curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg && \
+#     echo "deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/debian $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null && \
+#     apt-get update && \
+#     apt-get install -y docker-ce-cli
