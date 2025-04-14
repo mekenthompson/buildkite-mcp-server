@@ -53,7 +53,9 @@ kos:
       org.opencontainers.image.version: "{{.Version}}"
     bare: true
     preserve_import_paths: false
-    # disable: '{{ ne (envOrDefault "GOOS" "") "linux" }}'
+    # FIXME: We use GOOS and -split in our pipeline which is causing issues with the ko integration
+    # so we disable it here when the GOOS is set to something other than linux. This avoids 
+    # the ko build to fail when running on macos or windows.
     disable: '{{ and (isEnvSet "GOOS") (ne .Env.GOOS "linux") }}'
     platforms:
       - linux/amd64
