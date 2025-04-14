@@ -21,13 +21,13 @@ Example of the `get_pipeline` tool in action.
 
 ### Production
 
-Pull the pre-built image (once published):
+Pull the pre-built image (recommended):
 
 ```bash
-docker pull buildkite/buildkite-mcp-server
+docker pull ghcr.io/buildkite/buildkite-mcp-server
 ```
 
-Or build it yourself using GoReleaser:
+Or build it yourself using GoReleaser and copy the binary into your path:
 
 ```bash
 goreleaser build --snapshot --clean
@@ -37,7 +37,33 @@ goreleaser build --snapshot --clean
 
 Create a buildkite api token with read access to pipelines.
 
-## Local Installation
+## Claude Desktop Configuration
+
+Use this configuration if you want to run the server `buildkite-mcp-server` Docker (recommended):
+
+```json
+{
+    "mcpServers": {
+        "buildkite": {
+            "command": "docker",
+            "args": [
+                "run",
+                "-i",
+                "--rm",
+                "-e",
+                "BUILDKITE_API_TOKEN",
+                "ghcr.io/buildkite/buildkite-mcp-server",
+                "stdio"
+            ],
+            "env": {
+                "BUILDKITE_API_TOKEN": "bkua_xxxxxxxx"
+            }
+        }
+    }
+}
+```
+
+Configuration if you have `buildkite-mcp-server` installed locally.
 
 ```json
 {
@@ -55,34 +81,23 @@ Create a buildkite api token with read access to pipelines.
 }
 ```
 
-## Docker Configuration
-
-Use this configuration if you want to run the server using Docker:
-
-```json
-{
-    "mcpServers": {
-        "buildkite": {
-            "command": "docker",
-            "args": [
-                "run",
-                "-i",
-                "--rm",
-                "-e",
-                "BUILDKITE_API_TOKEN",
-                "buildkite/buildkite-mcp-server"
-            ],
-            "env": {
-                "BUILDKITE_API_TOKEN": "bkua_xxxxxxxx"
-            }
-        }
-    }
-}
-```
-
 ## Goose Configuration
 
-YAML configuration for [Goose](https://block.github.io/goose/):
+For Docker with [Goose](https://block.github.io/goose/) (recommended):
+
+```yaml
+extensions:
+  fetch:
+    name: Buildkite
+    cmd: docker
+    args: ["run", "-i", "--rm", "-e", "BUILDKITE_API_TOKEN", "ghcr.io/buildkite/buildkite-mcp-server", "stdio"]
+    enabled: true
+    envs: { "BUILDKITE_API_TOKEN": "bkua_xxxxxxxx" }
+    type: stdio
+    timeout: 300
+```
+
+Local configuration for Goose:
 
 ```yaml
 extensions:
@@ -90,20 +105,6 @@ extensions:
     name: Buildkite
     cmd: buildkite-mcp-server
     args: [stdio]
-    enabled: true
-    envs: { "BUILDKITE_API_TOKEN": "bkua_xxxxxxxx" }
-    type: stdio
-    timeout: 300
-```
-
-For Docker with Goose:
-
-```yaml
-extensions:
-  fetch:
-    name: Buildkite
-    cmd: docker
-    args: ["run", "-i", "--rm", "-e", "BUILDKITE_API_TOKEN", "buildkite/buildkite-mcp-server"]
     enabled: true
     envs: { "BUILDKITE_API_TOKEN": "bkua_xxxxxxxx" }
     type: stdio
