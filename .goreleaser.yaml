@@ -36,7 +36,7 @@ builds:
       - -trimpath
 kos:
   - repositories:
-      - ghcr.io/buildkie/buildkite-mcp-server
+      - ghcr.io/buildkite/buildkite-mcp-server
     build: buildkite-mcp-server
     main: ./cmd/buildkite-mcp-server/
     creation_time: "{{.CommitTimestamp}}"
