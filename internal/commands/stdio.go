@@ -26,14 +26,20 @@ func (c *StdioCmd) Run(ctx context.Context, globals *Globals) error {
 
 	s.AddTool(buildkite.GetPipeline(ctx, globals.Client.Pipelines))
 	s.AddTool(buildkite.ListPipelines(ctx, globals.Client.Pipelines))
+
 	s.AddTool(buildkite.ListBuilds(ctx, globals.Client.Builds))
 	s.AddTool(buildkite.GetBuild(ctx, globals.Client.Builds))
+
 	s.AddTool(buildkite.CurrentUser(ctx, globals.Client.User))
+
 	s.AddTool(buildkite.GetJobLogs(ctx, globals.Client))
+
 	s.AddTool(buildkite.AccessToken(ctx, globals.Client.AccessTokens))
 
 	s.AddTool(buildkite.ListArtifacts(ctx, clientAdapter))
 	s.AddTool(buildkite.GetArtifact(ctx, clientAdapter))
+
+	s.AddTool(buildkite.UserTokenOrganization(ctx, globals.Client.Organizations))
 
 	return server.ServeStdio(s)
 }
