@@ -16,7 +16,8 @@ before:
     - go generate ./...
 
 builds:
-  - binary: buildkite-mcp-server
+  - id: buildkite-mcp-server
+    binary: buildkite-mcp-server
     main: ./cmd/buildkite-mcp-server/main.go
     env:
       - CGO_ENABLED=0
@@ -24,20 +25,41 @@ builds:
       - linux
       - windows
       - darwin
-
-dockers:
-  - image_templates:
-    - "buildkite/buildkite-mcp-server:{{ .Version }}"
-    - "buildkite/buildkite-mcp-server:latest"
-    dockerfile: Dockerfile
-    build_flag_templates:
-    - "--pull"
-    - "--label=org.opencontainers.image.created={{.Date}}"
-    - "--label=org.opencontainers.image.title={{.ProjectName}}"
-    - "--label=org.opencontainers.image.revision={{.FullCommit}}"
-    - "--label=org.opencontainers.image.version={{.Version}}"
-    use: buildx
-
+    goarch:
+      - amd64
+      - arm64
+    goamd64:
+      - v2
+    ldflags:
+      - -s -w -X main.version={{.Version}}
+    flags:
+      - -trimpath
+kos:
+  - repositories:
+      - ghcr.io/buildkie/buildkite-mcp-server
+    build: buildkite-mcp-server
+    main: ./cmd/buildkite-mcp-server/
+    creation_time: "{{.CommitTimestamp}}"
+    base_image: 'cgr.dev/chainguard/static:latest@sha256:1ff7590cbc50eaaa917c34b092de0720d307f67d6d795e4f749a0b80a2e95a2c'
+    tags:
+      - '{{.Version}}'
+      - latest
+    labels:
+      org.opencontainers.image.authors: Buildkite Inc. https://buildkite.com
+      org.opencontainers.image.source: https://github.com/buildkite/buildkite-mcp-server
+      org.opencontainers.image.created: "{{.Date}}"
+      org.opencontainers.image.title: "{{.ProjectName}}"
+      org.opencontainers.image.revision: "{{.FullCommit}}"
+      org.opencontainers.image.version: "{{.Version}}"
+    bare: true
+    preserve_import_paths: false
+    # FIXME: We use GOOS and -split in our pipeline which is causing issues with the ko integration
+    # so we disable it here when the GOOS is set to something other than linux. This avoids 
+    # the ko build to fail when running on macos or windows.
+    disable: '{{ and (isEnvSet "GOOS") (ne .Env.GOOS "linux") }}'
+    platforms:
+      - linux/amd64
+      - linux/arm64
 archives:
   - formats: ["tar.gz"]
     # this name template makes the OS and Arch compatible with the results of `uname`.
