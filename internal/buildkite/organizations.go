@@ -42,3 +42,21 @@ func UserTokenOrganization(ctx context.Context, client OrganizationsClient) (too
 			return mcp.NewToolResultText(string(r)), nil
 		}
 }
+
+func HandleUserTokenOrganizationPrompt(
+	ctx context.Context,
+	request mcp.GetPromptRequest,
+) (*mcp.GetPromptResult, error) {
+	return &mcp.GetPromptResult{
+		Description: "When asked for detail of a users pipelines start by looking up the user's token organization",
+		Messages: []mcp.PromptMessage{
+			{
+				Role: mcp.RoleUser,
+				Content: mcp.TextContent{
+					Type: "text",
+					Text: "When asked for detail of a users pipelines start by looking up the user's token organization",
+				},
+			},
+		},
+	}, nil
+}
