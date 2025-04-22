@@ -37,6 +37,11 @@ func Process(jobLog buildkite.JobLog) (string, error) {
 			return "", fmt.Errorf("failed to extract plain text: %w", err)
 		}
 
+		if plainText == nil {
+			empty := ""
+			plainText = &empty
+		}
+
 		output.WriteString(*plainText + "\n")
 	}
 
