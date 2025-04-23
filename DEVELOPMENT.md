@@ -55,21 +55,17 @@ Then log into the web UI and hit connect.
 
 # Releasing to GitHub
 
-To push docker images GHCR you will need to login.
+To push docker images GHCR you will need to login, you will need to generate a legacy GitHub PSK to do a release locally. This will be entered in the command below.
 
 ```
-gh auth token | docker login ghcr.io --username $(gh api user --jq '.login') --password-stdin
+docker login ghcr.io --username $(gh api user --jq '.login') 
 ```
 
-Create a tag and push it to GitHub:
+Publish a release in GitHub, use the "generate changelog" button to build the changelog, this will create a tag for the release.
+
+Fetch tags and pull down the `main` branch, then run GoReleaser at the root of the repository.
 
 ```
-git tag -a v0.1.0 -m "First release"
-git push origin v0.1.0
-```
-
-Run GoReleaser at the root of your repository.
-
-```
+git fetch && git pull
 GITHUB_TOKEN=$(gh auth token) goreleaser release
 ```
