@@ -5,8 +5,11 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/mark3labs/mcp-go/mcp"
+	"github.com/mark3labs/mcp-go/server"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
 	"go.opentelemetry.io/otel/propagation"
@@ -85,4 +88,19 @@ func NewHTTPClient() *http.Client {
 	return &http.Client{
 		Transport: otelhttp.NewTransport(http.DefaultTransport),
 	}
+}
+
+func NewHooks() *server.Hooks {
+	hooks := &server.Hooks{}
+
+	hooks.AddOnError(func(ctx context.Context, id any, method mcp.MCPMethod, message any, err error) {
+		span := trace.SpanFromContext(ctx)
+		if span != nil {
+			span.SetAttributes(attribute.String("mcp.method", string(method)))
+			span.RecordError(err)
+			span.SetStatus(codes.Error, err.Error())
+		}
+	})
+
+	return hooks
 }
