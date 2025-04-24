@@ -6,6 +6,7 @@ import (
 
 	"github.com/alecthomas/kong"
 	"github.com/buildkite/buildkite-mcp-server/internal/commands"
+	"github.com/buildkite/buildkite-mcp-server/internal/trace"
 	"github.com/buildkite/go-buildkite/v4"
 	"github.com/rs/zerolog"
 )
@@ -40,7 +41,19 @@ func main() {
 		logger = logger.Level(zerolog.DebugLevel).With().Caller().Logger()
 	}
 
-	client, err := buildkite.NewOpts(buildkite.WithTokenAuth(cli.APIToken))
+	tp, err := trace.NewProvider(ctx, "buildkite-mcp-server", version)
+	if err != nil {
+		logger.Fatal().Err(err).Msg("failed to create trace provider")
+	}
+	defer func() {
+		_ = tp.Shutdown(ctx)
+	}()
+
+	client, err := buildkite.NewOpts(
+		buildkite.WithTokenAuth(cli.APIToken),
+		buildkite.WithUserAgent(commands.UserAgent(version)),
+		buildkite.WithHTTPClient(trace.NewHTTPClient()),
+	)
 	if err != nil {
 		logger.Fatal().Err(err).Msg("failed to create buildkite client")
 	}

@@ -9,10 +9,11 @@ import (
 	"io"
 	"net/http"
 
+	"github.com/buildkite/buildkite-mcp-server/internal/trace"
 	"github.com/buildkite/go-buildkite/v4"
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
-	"github.com/rs/zerolog/log"
+	"go.opentelemetry.io/otel/attribute"
 )
 
 type ArtifactsClient interface {
@@ -52,6 +53,9 @@ func ListArtifacts(ctx context.Context, client ArtifactsClient) (tool mcp.Tool, 
 			),
 		),
 		func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+			ctx, span := trace.Start(ctx, "buildkite.ListArtifacts")
+			defer span.End()
+
 			org, err := requiredParam[string](request, "org")
 			if err != nil {
 				return mcp.NewToolResultError(err.Error()), nil
@@ -72,12 +76,13 @@ func ListArtifacts(ctx context.Context, client ArtifactsClient) (tool mcp.Tool, 
 				return mcp.NewToolResultError(err.Error()), nil
 			}
 
-			log.Ctx(ctx).Debug().Fields(map[string]any{
-				"org":           org,
-				"pipeline_slug": pipelineSlug,
-				"build_number":  buildNumber,
-				"pagination":    paginationParams,
-			}).Msg("Listing artifacts")
+			span.SetAttributes(
+				attribute.String("org", org),
+				attribute.String("pipeline_slug", pipelineSlug),
+				attribute.String("build_number", buildNumber),
+				attribute.Int("page", paginationParams.Page),
+				attribute.Int("per_page", paginationParams.PerPage),
+			)
 
 			artifacts, resp, err := client.ListByBuild(ctx, org, pipelineSlug, buildNumber, &buildkite.ArtifactListOptions{
 				ListOptions: paginationParams,
@@ -111,10 +116,15 @@ func GetArtifact(ctx context.Context, client ArtifactsClient) (tool mcp.Tool, ha
 			),
 		),
 		func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+			ctx, span := trace.Start(ctx, "buildkite.GetArtifact")
+			defer span.End()
+
 			url, err := requiredParam[string](request, "url")
 			if err != nil {
 				return mcp.NewToolResultError(err.Error()), nil
 			}
+
+			span.SetAttributes(attribute.String("url", url))
 
 			// Use a buffer to capture the artifact data instead of writing directly to stdout
 			var buffer bytes.Buffer

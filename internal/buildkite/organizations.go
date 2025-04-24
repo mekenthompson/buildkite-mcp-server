@@ -5,10 +5,10 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/buildkite/buildkite-mcp-server/internal/trace"
 	"github.com/buildkite/go-buildkite/v4"
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
-	"github.com/rs/zerolog/log"
 )
 
 type OrganizationsClient interface {
@@ -19,7 +19,8 @@ func UserTokenOrganization(ctx context.Context, client OrganizationsClient) (too
 	return mcp.NewTool("user_token_organization",
 			mcp.WithDescription("Get the organization associated with the user token used for this request"),
 		), func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-			log.Ctx(ctx).Debug().Msg("Getting current user token organization")
+			ctx, span := trace.Start(ctx, "buildkite.UserTokenOrganization")
+			defer span.End()
 
 			orgs, resp, err := client.List(ctx, &buildkite.OrganizationListOptions{})
 			if err != nil {

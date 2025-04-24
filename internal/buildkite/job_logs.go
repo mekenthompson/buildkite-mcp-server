@@ -7,9 +7,11 @@ import (
 	"net/http"
 
 	"github.com/buildkite/buildkite-mcp-server/internal/buildkite/joblogs"
+	"github.com/buildkite/buildkite-mcp-server/internal/trace"
 	"github.com/buildkite/go-buildkite/v4"
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
+	"go.opentelemetry.io/otel/attribute"
 )
 
 func GetJobLogs(ctx context.Context, client *buildkite.Client) (tool mcp.Tool, handler server.ToolHandlerFunc) {
@@ -33,6 +35,9 @@ func GetJobLogs(ctx context.Context, client *buildkite.Client) (tool mcp.Tool, h
 			),
 		),
 		func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+			ctx, span := trace.Start(ctx, "buildkite.GetJobLogs")
+			defer span.End()
+
 			org, err := requiredParam[string](request, "org")
 			if err != nil {
 				return mcp.NewToolResultError(err.Error()), nil
@@ -52,6 +57,13 @@ func GetJobLogs(ctx context.Context, client *buildkite.Client) (tool mcp.Tool, h
 			if err != nil {
 				return mcp.NewToolResultError(err.Error()), nil
 			}
+
+			span.SetAttributes(
+				attribute.String("org", org),
+				attribute.String("pipeline_slug", pipelineSlug),
+				attribute.String("build_number", buildNumber),
+				attribute.String("job_uuid", jobUUID),
+			)
 
 			joblog, resp, err := client.Jobs.GetJobLog(ctx, org, pipelineSlug, buildNumber, jobUUID)
 			if err != nil {
