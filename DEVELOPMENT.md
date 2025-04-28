@@ -69,3 +69,27 @@ Fetch tags and pull down the `main` branch, then run GoReleaser at the root of t
 git fetch && git pull
 GITHUB_TOKEN=$(gh auth token) goreleaser release
 ```
+
+# Tracing
+
+To enable tracing in the MCP server you need to add some environment variables in the configuration, the example below is showing the claude desktop configuration paired with [honeycomb](https://honeycomb.io), however any OTEL service will work as long as it supports GRPC.
+
+```json
+{
+    "mcpServers": {
+        "buildkite": {
+            "command": "buildkite-mcp-server",
+            "args": [
+                "stdio"
+            ],
+            "env": {
+                "BUILDKITE_API_TOKEN": "bkua_xxxxx",
+                "OTEL_SERVICE_NAME": "buildkite-mcp-server",
+                "OTEL_EXPORTER_OTLP_PROTOCOL": "grpc",
+                "OTEL_EXPORTER_OTLP_ENDPOINT": "https://api.honeycomb.io:443",
+                "OTEL_EXPORTER_OTLP_HEADERS":"x-honeycomb-team=xxxxxx"
+            }
+        }
+    }
+}
+```

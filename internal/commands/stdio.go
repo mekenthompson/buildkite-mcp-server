@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/buildkite/buildkite-mcp-server/internal/buildkite"
+	"github.com/buildkite/buildkite-mcp-server/internal/trace"
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
 	"github.com/rs/zerolog/log"
@@ -18,6 +19,7 @@ func (c *StdioCmd) Run(ctx context.Context, globals *Globals) error {
 		"github-mcp-server",
 		globals.Version,
 		server.WithResourceCapabilities(true, true),
+		server.WithHooks(trace.NewHooks()),
 		server.WithLogging())
 
 	// add the logger to the context

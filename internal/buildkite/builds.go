@@ -7,10 +7,11 @@ import (
 	"io"
 	"net/http"
 
+	"github.com/buildkite/buildkite-mcp-server/internal/trace"
 	"github.com/buildkite/go-buildkite/v4"
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
-	"github.com/rs/zerolog/log"
+	"go.opentelemetry.io/otel/attribute"
 )
 
 type BuildsClient interface {
@@ -32,6 +33,9 @@ func ListBuilds(ctx context.Context, client BuildsClient) (tool mcp.Tool, handle
 			withPagination(),
 		),
 		func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+			ctx, span := trace.Start(ctx, "buildkite.ListBuilds")
+			defer span.End()
+
 			org, err := requiredParam[string](request, "org")
 			if err != nil {
 				return mcp.NewToolResultError(err.Error()), nil
@@ -47,11 +51,12 @@ func ListBuilds(ctx context.Context, client BuildsClient) (tool mcp.Tool, handle
 				return mcp.NewToolResultError(err.Error()), nil
 			}
 
-			log.Ctx(ctx).Debug().Fields(map[string]any{
-				"org":           org,
-				"pipeline_slug": pipelineSlug,
-				"pagination":    paginationParams,
-			}).Msg("Listing builds")
+			span.SetAttributes(
+				attribute.String("org", org),
+				attribute.String("pipeline_slug", pipelineSlug),
+				attribute.Int("page", paginationParams.Page),
+				attribute.Int("per_page", paginationParams.PerPage),
+			)
 
 			builds, resp, err := client.ListByPipeline(ctx, org, pipelineSlug, &buildkite.BuildsListOptions{
 				ListOptions: paginationParams,
@@ -94,6 +99,9 @@ func GetBuild(ctx context.Context, client BuildsClient) (tool mcp.Tool, handler 
 			),
 		),
 		func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+			ctx, span := trace.Start(ctx, "buildkite.GetBuild")
+			defer span.End()
+
 			org, err := requiredParam[string](request, "org")
 			if err != nil {
 				return mcp.NewToolResultError(err.Error()), nil
@@ -108,6 +116,12 @@ func GetBuild(ctx context.Context, client BuildsClient) (tool mcp.Tool, handler 
 			if err != nil {
 				return mcp.NewToolResultError(err.Error()), nil
 			}
+
+			span.SetAttributes(
+				attribute.String("org", org),
+				attribute.String("pipeline_slug", pipelineSlug),
+				attribute.String("build_number", buildNumber),
+			)
 
 			build, resp, err := client.Get(ctx, org, pipelineSlug, buildNumber, &buildkite.BuildsListOptions{})
 			if err != nil {

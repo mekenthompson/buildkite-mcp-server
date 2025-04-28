@@ -7,10 +7,11 @@ import (
 	"io"
 	"net/http"
 
+	"github.com/buildkite/buildkite-mcp-server/internal/trace"
 	"github.com/buildkite/go-buildkite/v4"
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
-	"github.com/rs/zerolog/log"
+	"go.opentelemetry.io/otel/attribute"
 )
 
 type PipelinesClient interface {
@@ -27,6 +28,9 @@ func ListPipelines(ctx context.Context, client PipelinesClient) (tool mcp.Tool, 
 			),
 			withPagination(),
 		), func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+			ctx, span := trace.Start(ctx, "buildkite.ListPipelines")
+			defer span.End()
+
 			org, err := requiredParam[string](request, "org")
 			if err != nil {
 				return mcp.NewToolResultError(err.Error()), nil
@@ -37,10 +41,11 @@ func ListPipelines(ctx context.Context, client PipelinesClient) (tool mcp.Tool, 
 				return mcp.NewToolResultError(err.Error()), nil
 			}
 
-			log.Ctx(ctx).Debug().Fields(map[string]any{
-				"org":        org,
-				"pagination": paginationParams,
-			}).Msg("Listing pipelines")
+			span.SetAttributes(
+				attribute.String("org", org),
+				attribute.Int("page", paginationParams.Page),
+				attribute.Int("per_page", paginationParams.PerPage),
+			)
 
 			pipelines, resp, err := client.List(ctx, org, &buildkite.PipelineListOptions{
 				ListOptions: paginationParams,
@@ -79,6 +84,9 @@ func GetPipeline(ctx context.Context, client PipelinesClient) (tool mcp.Tool, ha
 			),
 		),
 		func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+			ctx, span := trace.Start(ctx, "buildkite.GetPipeline")
+			defer span.End()
+
 			org, err := requiredParam[string](request, "org")
 			if err != nil {
 				return mcp.NewToolResultError(err.Error()), nil
@@ -88,6 +96,11 @@ func GetPipeline(ctx context.Context, client PipelinesClient) (tool mcp.Tool, ha
 			if err != nil {
 				return mcp.NewToolResultError(err.Error()), nil
 			}
+
+			span.SetAttributes(
+				attribute.String("org", org),
+				attribute.String("pipeline_slug", pipelineSlug),
+			)
 
 			pipeline, resp, err := client.Get(ctx, org, pipelineSlug)
 			if err != nil {
