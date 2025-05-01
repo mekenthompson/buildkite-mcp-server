@@ -111,6 +111,40 @@ extensions:
     timeout: 300
 ```
 
+## VSCode Configuration
+
+[VSCode](https://code.visualstudio.com/) supports interactive inputs for variables. To get the API token interactively on MCP startup.
+
+```json
+{
+    "inputs": [
+        {
+            "id": "BUILDKITE_API_TOKEN",
+            "type": "promptString",
+            "description": "Enter your BuildKite Access Token (https://buildkite.com/user/api-access-tokens)",
+            "password": true
+        }
+    ],
+    "servers": {
+        "buildkite": {
+            "command": "docker",
+            "args": [
+                "run",
+                "-i",
+                "--rm",
+                "-e",
+                "BUILDKITE_API_TOKEN",
+                "ghcr.io/buildkite/buildkite-mcp-server",
+                "stdio"
+            ],
+            "env": {
+                "BUILDKITE_API_TOKEN": "${input:BUILDKITE_API_TOKEN}"
+            }
+        }
+    }
+}
+```
+
 # Contributing
 
 Notes on building this project are in the [Development.md](Development.md)
