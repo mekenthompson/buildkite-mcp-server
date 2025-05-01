@@ -113,7 +113,7 @@ extensions:
 
 ## VSCode Configuration
 
-[VSCode](https://code.visualstudio.com/) supports interactive inputs for variables. To get the API token interactively on MCP startup.
+[VSCode](https://code.visualstudio.com/) supports interactive inputs for variables. To get the API token interactively on MCP startup, put the following in `.vscode/mcp.json`
 
 ```json
 {
