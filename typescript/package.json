@@ -1,5 +1,5 @@
 {
-  "name": "buildkite-mcp",
+  "name": "@buildkite/buildkite-mcp",
   "version": "0.2.0",
   "description": "Buildkite MCP server implementation in TypeScript",
   "main": "dist/index.js",
@@ -12,11 +12,11 @@
     "build": "tsc",
     "dev": "node --import ./register.js src/index.ts",
     "lint": "eslint src --ext .ts",
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "jest",
     "stdio": "node bin/buildkite-mcp.js",
-    "build:start": "npm run build && npm start",
+    "build:start": "yarn build && yarn start",
     "watch": "tsc -w",
-    "prepare": "chmod +x bin/buildkite-mcp.js && npm run build"
+    "prepare": "chmod +x bin/buildkite-mcp.js && yarn build"
   },
   "keywords": [
     "buildkite",
