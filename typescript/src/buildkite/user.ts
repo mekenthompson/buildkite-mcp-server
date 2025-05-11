@@ -6,11 +6,10 @@ import { BuildkiteClient } from './client.js';
  * Registers user-related tools with the MCP server
  */
 export function registerUserTools(server: McpServer, client: BuildkiteClient) {
-  // Tool: current_user
   server.tool(
     'current_user',
     'Get details of the current user in Buildkite',
-    {}, // No parameters needed
+    {},
     async () => {
       try {
         const result = await client.getCurrentUser();

@@ -6,7 +6,6 @@ import { BuildkiteClient } from './client.js';
  * Registers access token-related tools with the MCP server
  */
 export function registerAccessTokenTools(server: McpServer, client: BuildkiteClient) {
-  // Tool: access_token
   server.tool(
     'access_token',
     'Get details about the current Buildkite API token',
