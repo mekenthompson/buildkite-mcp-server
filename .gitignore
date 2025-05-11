@@ -1,8 +1,28 @@
+# Go build artifacts
 dist/
-.envrc*
-.vscode
 vendor/
-*.zip
-.bk.yaml
 /buildkite-mcp-server
 coverage.out
+
+# Node.js/TypeScript
+node_modules/
+**/node_modules/
+**/dist/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.npm
+.yarn-integrity
+*.tsbuildinfo
+
+# Editor/IDE
+.envrc*
+.vscode
+.idea/
+*.swp
+*.swo
+
+# Misc
+*.zip
+.bk.yaml
+.DS_Store
