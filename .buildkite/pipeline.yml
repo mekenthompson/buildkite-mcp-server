@@ -31,6 +31,14 @@ steps:
           tty: true
           mount-buildkite-agent: true
 
+  - label: ":typescript: build and test"
+    plugins:
+      - docker#v5.10.0:
+          build: true
+          dockerfile: ".buildkite/Dockerfile.ts"
+          workdir: "/app"
+          command: "npm run build && npm test"
+
   - wait
 
   - label: ":terminal: build ({{matrix}})"
