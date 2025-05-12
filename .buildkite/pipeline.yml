@@ -35,11 +35,9 @@ steps:
     plugins:
       - docker#v5.10.0:
           image: "node:20"
-          command: ["npm", "ci", "&&", "npm", "test"]
+          command: ["cd /typescript && npm ci && npm test"]
           volumes:
-            - "/typescript:/app"
-            - "/typescript/package-lock.json:/app/package-lock.json"
-            - "/typescript/package.json:/app/package.json"
+            - "/typescript:/typescript"
 
   - wait
 
