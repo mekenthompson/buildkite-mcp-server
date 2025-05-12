@@ -27,3 +27,8 @@ services:
       - ~/gomodcache:/gomodcache      
       - ${BUILDKITE_AGENT_JOB_API_SOCKET}:${BUILDKITE_AGENT_JOB_API_SOCKET}
       - /var/run/docker.sock:/var/run/docker.sock
+  typescript:
+    image: node:20
+    working_dir: /app/typescript
+    volumes:
+      - ..:/app

@@ -32,11 +32,11 @@ steps:
           mount-buildkite-agent: true
 
   - label: ":typescript: build and test"
+    command: npm ci && npm test
     plugins:
-      - docker#v5.10.0:
-          image: "node:20"
-          command: ["npm", "ci", "&&", "npm", "test"]
-          workdir: "/typescript"
+      - docker-compose#v5.2.0:
+          config: .buildkite/docker-compose.yaml
+          run: typescript
 
   - wait
 
