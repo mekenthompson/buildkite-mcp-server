@@ -35,8 +35,6 @@ steps:
     plugins:
       - docker#v5.10.0:
           image: "node:20"
-          volumes:
-            - "/typescript:/typescript"
           command: ["npm", "ci", "&&", "npm", "test"]
           workdir: "/typescript"
 
