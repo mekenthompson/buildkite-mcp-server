@@ -34,10 +34,8 @@ steps:
   - label: ":typescript: build and test"
     plugins:
       - docker#v5.10.0:
-          build: true
-          dockerfile: ".buildkite/Dockerfile.ts"
-          workdir: "/app"
-          command: "npm run build && npm test"
+          image: "node:20"
+          command: "npm ci && npm test"
 
   - wait
 
