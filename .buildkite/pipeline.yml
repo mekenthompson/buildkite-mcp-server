@@ -35,7 +35,7 @@ steps:
     plugins:
       - docker#v5.10.0:
           image: "node:20"
-          command: ["cd /typescript && npm ci && npm test"]
+          command: ["cd", "typescript", "&&", "npm", "ci", "&&", "npm", "test"]
           volumes:
             - "/typescript:/typescript"
 
