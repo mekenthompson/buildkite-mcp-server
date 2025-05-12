@@ -38,6 +38,8 @@ steps:
           command: ["npm", "ci", "&&", "npm", "test"]
           volumes:
             - "/typescript:/app"
+            - "/typescript/package-lock.json:/app/package-lock.json"
+            - "/typescript/package.json:/app/package.json"
 
   - wait
 
