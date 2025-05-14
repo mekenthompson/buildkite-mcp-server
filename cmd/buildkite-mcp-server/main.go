@@ -17,6 +17,7 @@ var (
 	cli struct {
 		Stdio    commands.StdioCmd `cmd:"" help:"stdio mcp server."`
 		APIToken string            `help:"The Buildkite API token to use." env:"BUILDKITE_API_TOKEN"`
+		BaseURL  string            `help:"The base URL of the Buildkite API to use." env:"BUILDKITE_BASE_URL"`
 		Debug    bool              `help:"Enable debug mode."`
 		Version  kong.VersionFlag
 	}
@@ -53,6 +54,7 @@ func main() {
 		buildkite.WithTokenAuth(cli.APIToken),
 		buildkite.WithUserAgent(commands.UserAgent(version)),
 		buildkite.WithHTTPClient(trace.NewHTTPClient()),
+		buildkite.WithBaseURL(cli.BaseURL),
 	)
 	if err != nil {
 		logger.Fatal().Err(err).Msg("failed to create buildkite client")
