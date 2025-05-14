@@ -90,6 +90,28 @@ func NewHTTPClient() *http.Client {
 	}
 }
 
+// NewHTTPClientWithHeaders returns an http.Client that injects the provided headers into every request.
+func NewHTTPClientWithHeaders(headers map[string]string) *http.Client {
+	return &http.Client{
+		Transport: &headerInjector{
+			headers:   headers,
+			wrapped:   otelhttp.NewTransport(http.DefaultTransport),
+		},
+	}
+}
+
+type headerInjector struct {
+	headers map[string]string
+	wrapped http.RoundTripper
+}
+
+func (h *headerInjector) RoundTrip(req *http.Request) (*http.Response, error) {
+	for k, v := range h.headers {
+		req.Header.Set(k, v)
+	}
+	return h.wrapped.RoundTrip(req)
+}
+
 func NewHooks() *server.Hooks {
 	hooks := &server.Hooks{}
 
