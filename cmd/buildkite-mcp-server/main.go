@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"os"
 
 	"github.com/alecthomas/kong"
@@ -15,11 +16,12 @@ var (
 	version = "dev"
 
 	cli struct {
-		Stdio    commands.StdioCmd `cmd:"" help:"stdio mcp server."`
-		APIToken string            `help:"The Buildkite API token to use." env:"BUILDKITE_API_TOKEN"`
-		BaseURL  string            `help:"The base URL of the Buildkite API to use." env:"BUILDKITE_BASE_URL"`
-		Debug    bool              `help:"Enable debug mode."`
-		Version  kong.VersionFlag
+		Stdio       commands.StdioCmd `cmd:"" help:"stdio mcp server."`
+		APIToken    string            `help:"The Buildkite API token to use." env:"BUILDKITE_API_TOKEN"`
+		BaseURL     string            `help:"The base URL of the Buildkite API to use." env:"BUILDKITE_BASE_URL"`
+		Debug       bool              `help:"Enable debug mode."`
+		HTTPHeaders []string          `help:"Additional HTTP headers to send with every request. Format: 'Key: Value'" name:"http-header" env:"BUILDKITE_HTTP_HEADERS"`
+		Version     kong.VersionFlag
 	}
 )
 
@@ -50,10 +52,21 @@ func main() {
 		_ = tp.Shutdown(ctx)
 	}()
 
+	// Parse additional headers into a map
+	headers := make(map[string]string)
+	for _, h := range cli.HTTPHeaders {
+		var key, value string
+		if n, _ := fmt.Sscanf(h, "%s: %s", &key, &value); n == 2 {
+			headers[key] = value
+		} else {
+			logger.Warn().Str("header", h).Msg("invalid header format, expected 'Key: Value'")
+		}
+	}
+
 	client, err := buildkite.NewOpts(
 		buildkite.WithTokenAuth(cli.APIToken),
 		buildkite.WithUserAgent(commands.UserAgent(version)),
-		buildkite.WithHTTPClient(trace.NewHTTPClient()),
+		buildkite.WithHTTPClient(trace.NewHTTPClientWithHeaders(headers)),
 		buildkite.WithBaseURL(cli.BaseURL),
 	)
 	if err != nil {
