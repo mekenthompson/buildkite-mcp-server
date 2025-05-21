@@ -18,6 +18,10 @@ type AccessTokenClient interface {
 func AccessToken(ctx context.Context, client AccessTokenClient) (tool mcp.Tool, handler server.ToolHandlerFunc) {
 	return mcp.NewTool("access_token",
 			mcp.WithDescription("Get the details for the API access token that was used to authenticate the request"),
+			mcp.WithToolAnnotation(mcp.ToolAnnotation{
+				Title:        "Get Access Token",
+				ReadOnlyHint: mcp.ToBoolPtr(true),
+			}),
 		), func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 			ctx, span := trace.Start(ctx, "buildkite.AccessToken")
 			defer span.End()

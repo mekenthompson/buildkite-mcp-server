@@ -51,22 +51,30 @@ func ListArtifacts(ctx context.Context, client ArtifactsClient) (tool mcp.Tool, 
 				mcp.Required(),
 				mcp.Description("The build number"),
 			),
+			mcp.WithToolAnnotation(mcp.ToolAnnotation{
+				Title:        "Artifact List",
+				ReadOnlyHint: mcp.ToBoolPtr(true),
+			}),
+			mcp.WithToolAnnotation(mcp.ToolAnnotation{
+				Title:        "List Artifacts",
+				ReadOnlyHint: mcp.ToBoolPtr(true),
+			}),
 		),
 		func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 			ctx, span := trace.Start(ctx, "buildkite.ListArtifacts")
 			defer span.End()
 
-			org, err := requiredParam[string](request, "org")
+			org, err := request.RequireString("org")
 			if err != nil {
 				return mcp.NewToolResultError(err.Error()), nil
 			}
 
-			pipelineSlug, err := requiredParam[string](request, "pipeline_slug")
+			pipelineSlug, err := request.RequireString("pipeline_slug")
 			if err != nil {
 				return mcp.NewToolResultError(err.Error()), nil
 			}
 
-			buildNumber, err := requiredParam[string](request, "build_number")
+			buildNumber, err := request.RequireString("build_number")
 			if err != nil {
 				return mcp.NewToolResultError(err.Error()), nil
 			}
@@ -114,12 +122,16 @@ func GetArtifact(ctx context.Context, client ArtifactsClient) (tool mcp.Tool, ha
 				mcp.Required(),
 				mcp.Description("The URL of the artifact to get"),
 			),
+			mcp.WithToolAnnotation(mcp.ToolAnnotation{
+				Title:        "Get Artifact",
+				ReadOnlyHint: mcp.ToBoolPtr(true),
+			}),
 		),
 		func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 			ctx, span := trace.Start(ctx, "buildkite.GetArtifact")
 			defer span.End()
 
-			url, err := requiredParam[string](request, "url")
+			url, err := request.RequireString("url")
 			if err != nil {
 				return mcp.NewToolResultError(err.Error()), nil
 			}
