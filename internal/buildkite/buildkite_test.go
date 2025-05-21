@@ -8,19 +8,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func Test_requiredParam(t *testing.T) {
-	t.Run("valid string parameter", func(t *testing.T) {
-		assert := require.New(t)
-		req := createMCPRequest(t, map[string]any{
-			"test": "value",
-		})
-
-		result, err := requiredParam[string](req, "test")
-		assert.NoError(err)
-		assert.Equal("value", result)
-	})
-}
-
 func Test_optionalPaginationParams(t *testing.T) {
 	tests := []struct {
 		name      string
@@ -49,15 +36,6 @@ func Test_optionalPaginationParams(t *testing.T) {
 			},
 			expectErr: false,
 		},
-		{
-			name: "invalid pagination parameters",
-			args: map[string]any{
-				"page":    "invalid",
-				"perPage": "invalid",
-			},
-			expected:  buildkite.ListOptions{},
-			expectErr: true,
-		},
 	}
 
 	for _, tt := range tests {
@@ -80,11 +58,9 @@ func createMCPRequest(t *testing.T, args map[string]any) mcp.CallToolRequest {
 	t.Helper()
 	return mcp.CallToolRequest{
 		Params: struct {
-			Name      string                 `json:"name"`
-			Arguments map[string]interface{} `json:"arguments,omitempty"`
-			Meta      *struct {
-				ProgressToken mcp.ProgressToken `json:"progressToken,omitempty"`
-			} `json:"_meta,omitempty"`
+			Name      string    `json:"name"`
+			Arguments any       `json:"arguments,omitempty"`
+			Meta      *mcp.Meta `json:"_meta,omitempty"`
 		}{
 			Arguments: args,
 		},

@@ -33,27 +33,31 @@ func GetJobLogs(ctx context.Context, client *buildkite.Client) (tool mcp.Tool, h
 				mcp.Required(),
 				mcp.Description("The UUID of the job"),
 			),
+			mcp.WithToolAnnotation(mcp.ToolAnnotation{
+				Title:        "Get Job Logs",
+				ReadOnlyHint: mcp.ToBoolPtr(true),
+			}),
 		),
 		func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 			ctx, span := trace.Start(ctx, "buildkite.GetJobLogs")
 			defer span.End()
 
-			org, err := requiredParam[string](request, "org")
+			org, err := request.RequireString("org")
 			if err != nil {
 				return mcp.NewToolResultError(err.Error()), nil
 			}
 
-			pipelineSlug, err := requiredParam[string](request, "pipeline_slug")
+			pipelineSlug, err := request.RequireString("pipeline_slug")
 			if err != nil {
 				return mcp.NewToolResultError(err.Error()), nil
 			}
 
-			buildNumber, err := requiredParam[string](request, "build_number")
+			buildNumber, err := request.RequireString("build_number")
 			if err != nil {
 				return mcp.NewToolResultError(err.Error()), nil
 			}
 
-			jobUUID, err := requiredParam[string](request, "job_uuid")
+			jobUUID, err := request.RequireString("job_uuid")
 			if err != nil {
 				return mcp.NewToolResultError(err.Error()), nil
 			}

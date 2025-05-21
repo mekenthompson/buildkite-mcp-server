@@ -31,17 +31,21 @@ func ListBuilds(ctx context.Context, client BuildsClient) (tool mcp.Tool, handle
 				mcp.Description("The slug of the pipeline"),
 			),
 			withPagination(),
+			mcp.WithToolAnnotation(mcp.ToolAnnotation{
+				Title:        "List Builds",
+				ReadOnlyHint: mcp.ToBoolPtr(true),
+			}),
 		),
 		func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 			ctx, span := trace.Start(ctx, "buildkite.ListBuilds")
 			defer span.End()
 
-			org, err := requiredParam[string](request, "org")
+			org, err := request.RequireString("org")
 			if err != nil {
 				return mcp.NewToolResultError(err.Error()), nil
 			}
 
-			pipelineSlug, err := requiredParam[string](request, "pipeline_slug")
+			pipelineSlug, err := request.RequireString("pipeline_slug")
 			if err != nil {
 				return mcp.NewToolResultError(err.Error()), nil
 			}
@@ -97,22 +101,26 @@ func GetBuild(ctx context.Context, client BuildsClient) (tool mcp.Tool, handler 
 				mcp.Required(),
 				mcp.Description("The number of the build"),
 			),
+			mcp.WithToolAnnotation(mcp.ToolAnnotation{
+				Title:        "Get Build",
+				ReadOnlyHint: mcp.ToBoolPtr(true),
+			}),
 		),
 		func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 			ctx, span := trace.Start(ctx, "buildkite.GetBuild")
 			defer span.End()
 
-			org, err := requiredParam[string](request, "org")
+			org, err := request.RequireString("org")
 			if err != nil {
 				return mcp.NewToolResultError(err.Error()), nil
 			}
 
-			pipelineSlug, err := requiredParam[string](request, "pipeline_slug")
+			pipelineSlug, err := request.RequireString("pipeline_slug")
 			if err != nil {
 				return mcp.NewToolResultError(err.Error()), nil
 			}
 
-			buildNumber, err := requiredParam[string](request, "build_number")
+			buildNumber, err := request.RequireString("build_number")
 			if err != nil {
 				return mcp.NewToolResultError(err.Error()), nil
 			}

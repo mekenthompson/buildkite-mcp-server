@@ -131,7 +131,7 @@ func TestListArtifacts_MissingParameters(t *testing.T) {
 	result, err := handler(ctx, req)
 	assert.NoError(err)
 	assert.NotNil(result)
-	assert.Contains(getTextResult(t, result).Text, "missing required argument: org")
+	assert.Contains(getTextResult(t, result).Text, "required argument \"org\" not found")
 
 	// Test missing pipeline_slug parameter
 	req = createMCPRequest(t, map[string]any{
@@ -141,7 +141,7 @@ func TestListArtifacts_MissingParameters(t *testing.T) {
 	result, err = handler(ctx, req)
 	assert.NoError(err)
 	assert.NotNil(result)
-	assert.Contains(getTextResult(t, result).Text, "missing required argument: pipeline_slug")
+	assert.Contains(getTextResult(t, result).Text, "required argument \"pipeline_slug\" not found")
 
 	// Test missing build_number parameter
 	req = createMCPRequest(t, map[string]any{
@@ -151,7 +151,7 @@ func TestListArtifacts_MissingParameters(t *testing.T) {
 	result, err = handler(ctx, req)
 	assert.NoError(err)
 	assert.NotNil(result)
-	assert.Contains(getTextResult(t, result).Text, "missing required argument: build_number")
+	assert.Contains(getTextResult(t, result).Text, "required argument \"build_number\" not found")
 }
 
 func TestGetArtifact_MissingParameters(t *testing.T) {
@@ -167,7 +167,7 @@ func TestGetArtifact_MissingParameters(t *testing.T) {
 	result, err := handler(ctx, req)
 	assert.NoError(err)
 	assert.NotNil(result)
-	assert.Contains(getTextResult(t, result).Text, "missing required argument: url")
+	assert.Contains(getTextResult(t, result).Text, "required argument \"url\" not found")
 }
 
 func TestGetArtifact_ErrorResponse(t *testing.T) {
