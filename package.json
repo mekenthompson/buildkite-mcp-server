@@ -1,0 +1,47 @@
+{
+  "name": "@buildkite/buildkite-mcp-server",
+  "version": "1.0.0",
+  "description": "NPM wrapper for Buildkite MCP Server binary",
+  "main": "index.js",
+  "bin": {
+    "buildkite-mcp-server": "bin/run.js"
+  },
+  "scripts": {
+    "postinstall": "node install.js"
+  },
+  "keywords": [
+    "buildkite",
+    "mcp",
+    "model-context-protocol"
+  ],
+  "author": "Buildkite",
+  "license": "MIT",
+  "files": [
+    "bin",
+    "install.js",
+    "index.js"
+  ],
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "os": [
+    "darwin",
+    "linux",
+    "win32"
+  ],
+  "cpu": [
+    "x64",
+    "arm64"
+  ],
+  "directories": {
+    "doc": "docs"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/buildkite/buildkite-mcp-server.git"
+  },
+  "bugs": {
+    "url": "https://github.com/buildkite/buildkite-mcp-server/issues"
+  },
+  "homepage": "https://github.com/buildkite/buildkite-mcp-server#readme"
+}
