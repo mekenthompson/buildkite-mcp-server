@@ -33,15 +33,8 @@
     "x64",
     "arm64"
   ],
-  "directories": {
-    "doc": "docs"
-  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/buildkite/buildkite-mcp-server.git"
-  },
-  "bugs": {
-    "url": "https://github.com/buildkite/buildkite-mcp-server/issues"
-  },
-  "homepage": "https://github.com/buildkite/buildkite-mcp-server#readme"
+  }
 }
