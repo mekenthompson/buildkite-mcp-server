@@ -8,7 +8,6 @@ const os = require('os');
 const { createGunzip } = require('zlib');
 const { pipeline } = require('stream');
 
-// Configuration
 const REPO_OWNER = 'buildkite';
 const REPO_NAME = 'buildkite-mcp-server';
 const BINARY_NAME = 'buildkite-mcp-server';
@@ -52,21 +51,12 @@ https.get(releaseUrl, options, (res) => {
         console.error('No release assets found. The project may not have published binaries yet.');
         console.log('You can build from source using: goreleaser build --snapshot --clean');
         if (require.main === module) {
-      process.exit(1);
-    } else {
-      throw new Error('Installation failed');
-    }
+        process.exit(1);
+      } else {
+        throw new Error('Installation failed');
       }
-
-      // Look for the right asset based on platform and architecture
-      // Buildkite's actual naming pattern (from their releases):
-      // - buildkite-mcp-server_Darwin_arm64.tar.gz
-      // - buildkite-mcp-server_Darwin_x86_64.tar.gz
-      // - buildkite-mcp-server_Linux_arm64.tar.gz
-      // - buildkite-mcp-server_Linux_x86_64.tar.gz
-      // - buildkite-mcp-server_Windows_arm64.zip
-      // - buildkite-mcp-server_Windows_x86_64.zip
-      
+      }
+       
       const platformName = getPlatformName();
       const archName = getArchName();
       const extension = platformName === 'Windows' ? 'zip' : 'tar.gz';
@@ -86,25 +76,18 @@ https.get(releaseUrl, options, (res) => {
         console.log('Available assets:');
         assets.forEach(a => console.log(`  - ${a.name}`));
         console.log('\nYou can build from source using: goreleaser build --snapshot --clean');
-        if (require.main === module) {
-      process.exit(1);
-    } else {
-      throw new Error('Installation failed');
-    }
+        process.exit(1);
       }
       
       // Download and extract the binary
-      console.log(`Found asset: ${asset.name}, URL: ${asset.browser_download_url}`);
+      // Don't log the full asset URL as it's too noisy
+      console.log(`Found release for ${platform}-${arch}`);
       downloadAndExtract(asset.browser_download_url, asset.name, binaryPath);
     } catch (error) {
       console.error('Error parsing release information:', error);
       console.log('The repository may not have releases yet. You can build from source using:');
       console.log('goreleaser build --snapshot --clean');
-      if (require.main === module) {
       process.exit(1);
-    } else {
-      throw new Error('Installation failed');
-    }
     }
   });
 }).on('error', (err) => {
@@ -115,25 +98,19 @@ https.get(releaseUrl, options, (res) => {
 function downloadAndExtract(url, fileName, destPath, redirectCount = 0) {
   if (redirectCount > 5) { // Limit redirects to prevent infinite loops
     console.error('Too many redirects, aborting download.');
-    if (require.main === module) {
-      process.exit(1);
-    } else {
-      throw new Error('Installation failed');
-    }
+    process.exit(1);
   }
 
   const tempFile = path.join(os.tmpdir(), fileName);
   const file = fs.createWriteStream(tempFile);
   
-  console.log(`Downloading ${fileName}${redirectCount > 0 ? ` (redirect #${redirectCount})` : ''} from ${url}...`);
+  console.log(`Downloading ${BINARY_NAME} for ${platform}-${arch}...`);
   
-  const request = https.get(url, { headers: { 'User-Agent': 'nodejs-installer' } }, (res) => { // Added User-Agent here too for consistency
+  const request = https.get(url, { headers: { 'User-Agent': 'nodejs-installer' } }, (res) => {
     // Handle redirects
     if (res.statusCode === 301 || res.statusCode === 302 || res.statusCode === 307 || res.statusCode === 308) {
-      console.log(`Redirected with status ${res.statusCode} to ${res.headers.location}`);
-      file.close(); // Close the current (empty) file stream
-      fs.unlink(tempFile, () => {}); // Delete the empty temp file
-      // Call downloadAndExtract again with the new URL and incremented redirectCount
+      file.close();
+      fs.unlink(tempFile, () => {});
       downloadAndExtract(res.headers.location, fileName, destPath, redirectCount + 1);
       return;
     }
@@ -142,29 +119,32 @@ function downloadAndExtract(url, fileName, destPath, redirectCount = 0) {
       console.error(`Error downloading binary: Server responded with status code ${res.statusCode} for URL ${url}`);
       file.close();
       fs.unlink(tempFile, () => {}); 
-      if (require.main === module) {
       process.exit(1);
-    } else {
-      throw new Error('Installation failed');
-    }
+      return;
     }
 
+    // Pipe the response to the file
     res.pipe(file);
     
+    // Handle errors on the response stream
+    res.on('error', (err) => {
+      file.close();
+      fs.unlink(tempFile, () => {});
+      console.error('Error in response stream:', err);
+      process.exit(1);
+    });
+    
+    // Handle file completion
     file.on('finish', () => {
       file.close(() => {
         try {
           const stats = fs.statSync(tempFile);
-          console.log(`Downloaded ${fileName} to ${tempFile}. Size: ${stats.size} bytes.`);
+          console.log(`Downloaded ${BINARY_NAME} (${(stats.size / 1024 / 1024).toFixed(2)} MB)`);
 
           if (stats.size < 100) { 
             console.error(`Error: Downloaded file ${fileName} is too small (${stats.size} bytes). This might indicate an empty or corrupted archive. Please check the asset on GitHub: ${url}`);
             fs.unlinkSync(tempFile); 
-            if (require.main === module) {
-      process.exit(1);
-    } else {
-      throw new Error('Installation failed');
-    }
+            process.exit(1);
           }
 
           if (fileName.endsWith('.tar.gz')) {
@@ -172,44 +152,23 @@ function downloadAndExtract(url, fileName, destPath, redirectCount = 0) {
           } else if (fileName.endsWith('.zip')) {
             extractZip(tempFile, path.dirname(destPath), destPath);
           } else {
-            // Assume it's a raw binary
             fs.copyFileSync(tempFile, destPath);
           }
           
-          // Make the binary executable
           fs.chmodSync(destPath, '755');
           
           // Clean up
           fs.unlinkSync(tempFile);
           
-          console.log(`Successfully installed ${BINARY_NAME}`);
+          console.log(`✅ Successfully installed ${BINARY_NAME}`);
           
-          // Only exit if this script is being run directly (not required as a module)
-          if (require.main === module) {
-            process.exit(0);
-          }
+          process.exit(0);
           
         } catch (error) {
           console.error('Error extracting binary:', error);
-          if (require.main === module) {
-      process.exit(1);
-    } else {
-      throw new Error('Installation failed');
-    }
+          process.exit(1);
         }
       });
-    });
-    
-    // Handle errors on the response stream
-    res.on('error', (err) => {
-      file.close();
-      fs.unlink(tempFile, () => {});
-      console.error('Error in response stream:', err);
-      if (require.main === module) {
-      process.exit(1);
-    } else {
-      throw new Error('Installation failed');
-    }
     });
   });
   
@@ -218,11 +177,7 @@ function downloadAndExtract(url, fileName, destPath, redirectCount = 0) {
     file.close();
     fs.unlink(tempFile, () => {});
     console.error('Error downloading binary:', err);
-    if (require.main === module) {
-      process.exit(1);
-    } else {
-      throw new Error('Installation failed');
-    }
+    process.exit(1);
   });
   
   // Set a timeout on the request
@@ -231,11 +186,7 @@ function downloadAndExtract(url, fileName, destPath, redirectCount = 0) {
     file.close();
     fs.unlink(tempFile, () => {});
     console.error('Download timed out after 60 seconds');
-    if (require.main === module) {
-      process.exit(1);
-    } else {
-      throw new Error('Installation failed');
-    }
+    process.exit(1);
   });
 }
 
@@ -243,16 +194,13 @@ function extractTarGz(tarPath, extractDir, finalBinaryPath) {
   try {
     const binaryName = path.basename(finalBinaryPath);
     
-    // Use system tar command - much more reliable than custom implementation
-    console.log(`Extracting ${path.basename(tarPath)}...`);
+    console.log(`Extracting ${BINARY_NAME}...`);
     execSync(`tar -xzf "${tarPath}" -C "${extractDir}"`, { stdio: 'inherit' });
     
-    // Find the extracted binary
     const extractedBinary = findBinary(extractDir, binaryName);
     if (extractedBinary && extractedBinary !== finalBinaryPath) {
       fs.renameSync(extractedBinary, finalBinaryPath);
     } else if (!fs.existsSync(finalBinaryPath)) {
-      // List what was actually extracted to help debug
       console.log('Files extracted to bin directory:');
       try {
         const files = fs.readdirSync(extractDir, { recursive: true });
@@ -273,7 +221,6 @@ function extractTarGz(tarPath, extractDir, finalBinaryPath) {
 }
 
 function extractTarGzManual(tarPath, extractDir, finalBinaryPath) {
-  // Fallback manual extraction
   const readStream = fs.createReadStream(tarPath);
   const gunzip = createGunzip();
   
@@ -282,11 +229,7 @@ function extractTarGzManual(tarPath, extractDir, finalBinaryPath) {
   pipeline(readStream, gunzip, (err) => {
     if (err) {
       console.error('Error decompressing file:', err);
-      if (require.main === module) {
       process.exit(1);
-    } else {
-      throw new Error('Installation failed');
-    }
     }
   });
   
@@ -301,21 +244,13 @@ function extractTarGzManual(tarPath, extractDir, finalBinaryPath) {
       console.error('Error parsing tar file:', error);
       console.log('Manual extraction failed. The tar.gz file may have an unsupported format.');
       console.log('Consider installing the tar dependency: npm install tar');
-      if (require.main === module) {
       process.exit(1);
-    } else {
-      throw new Error('Installation failed');
-    }
     }
   });
 }
 
 function extractZip(zipPath, extractDir, finalBinaryPath) {
-  // For Windows ZIP files, we'll use a simple approach
-  // In a production environment, you might want to use a proper ZIP library
-  
   try {
-    // Try using built-in unzip if available (Windows PowerShell or macOS/Linux unzip)
     const binaryName = path.basename(finalBinaryPath);
     
     if (os.platform() === 'win32') {
@@ -337,11 +272,7 @@ function extractZip(zipPath, extractDir, finalBinaryPath) {
   } catch (error) {
     console.error('Error extracting ZIP file:', error);
     console.log('You may need to extract the ZIP file manually and place the binary in the bin directory');
-    if (require.main === module) {
-      process.exit(1);
-    } else {
-      throw new Error('Installation failed');
-    }
+    process.exit(1);
   }
 }
 
@@ -378,9 +309,7 @@ function findBinaryRecursive(dir, binaryName) {
 }
 
 function parseTar(buffer, extractDir, finalBinaryPath) {
-  // Very basic tar parser - this might not work for all tar files
-  // For production use, consider using the 'tar' npm package
-  
+  // Simple tar parser; we might need to consider using the 'tar' npm package
   let offset = 0;
   const binaryName = path.basename(finalBinaryPath);
   
@@ -389,7 +318,6 @@ function parseTar(buffer, extractDir, finalBinaryPath) {
     
     const header = buffer.slice(offset, offset + 512);
     
-    // Check if this is a valid tar header (simple check)
     const nameBytes = header.slice(0, 100);
     const name = nameBytes.toString('utf8').replace(/\0.*$/, '');
     
@@ -402,7 +330,6 @@ function parseTar(buffer, extractDir, finalBinaryPath) {
     offset += 512; // Skip header
     
     if (name.endsWith(binaryName) || name === binaryName) {
-      // Found our binary!
       const fileData = buffer.slice(offset, offset + size);
       fs.writeFileSync(finalBinaryPath, fileData);
       return;
@@ -426,7 +353,6 @@ function getPlatform() {
 }
 
 function getPlatformName() {
-  // For Buildkite's naming convention (capitalized)
   const platform = os.platform();
   
   if (platform === 'darwin') return 'Darwin';
@@ -447,7 +373,6 @@ function getArch() {
 }
 
 function getArchName() {
-  // For Buildkite's naming convention
   const arch = os.arch();
   
   if (arch === 'x64') return 'x86_64';

@@ -24,46 +24,45 @@ if (packageJson.name !== "@buildkite/buildkite-mcp-server") {
 
 // Test 1: Check all required files exist
 console.log("📁 Checking required files...");
-const requiredFiles = ["install.js", "index.js", "bin/run.js"];
+const requiredFiles = [
+  { path: path.join(__dirname, "install.js"), display: "node/install.js" },
+  { path: path.join(__dirname, "bin/run.js"), display: "node/bin/run.js" }
+];
+
 for (const file of requiredFiles) {
-  if (fs.existsSync(file)) {
-    console.log(`✅ ${file}`);
+  if (fs.existsSync(file.path)) {
+    console.log(`✅ ${file.display}`);
   } else {
-    console.log(`❌ ${file} - Missing!`);
+    console.log(`❌ ${file.display} - Missing!`);
+    process.exit(1);
   }
 }
 
-// Test 2: Make bin/run.js executable (Unix-like systems)
+// Test 2: Make bin/run.js executable
 if (process.platform !== "win32") {
   try {
-    fs.chmodSync("bin/run.js", "755");
-    console.log("✅ Made bin/run.js executable");
+    const binPath = path.join(__dirname, "bin/run.js");
+    fs.chmodSync(binPath, "755");
+    console.log("✅ Made node/bin/run.js executable");
   } catch (err) {
-    console.log("⚠️  Could not make bin/run.js executable:", err.message);
+    console.log("⚠️  Could not make node/bin/run.js executable:", err.message);
+    process.exit(1);
   }
 }
 
 // Test 3: Try to run the install script
 console.log("\n🔧 Testing install script...");
 try {
-  require("./install.js");
+  const { execSync } = require("child_process");
+  console.log("Executing install script directly...");
+  execSync(`node ${path.join(__dirname, "install.js")}`, { stdio: 'inherit' });
+  console.log("✅ Install script executed successfully");
 } catch (err) {
   console.log("❌ Install script failed:", err.message);
-  console.log("This might be expected if there are no releases yet.\n");
+  process.exit(1);
 }
 
-// Test 4: Check if the module can be required
-console.log("📦 Testing module import...");
-try {
-  const buildkite = require("./index.js");
-  console.log("✅ Module imported successfully");
-  console.log("   Binary path:", buildkite.path);
-  console.log("   Required env:", buildkite.requiredEnv);
-} catch (err) {
-  console.log("❌ Module import failed:", err.message);
-}
-
-// Test 5: Create a tarball for testing
+// Test 4: Create a tarball for testing
 console.log("\n📦 Creating test tarball...");
 try {
   const { execSync } = require("child_process");
@@ -71,6 +70,7 @@ try {
   console.log("✅ Package structure looks good");
 } catch (err) {
   console.log("❌ Package creation failed:", err.message);
+  process.exit(1);
 }
 
 console.log("\n🎯 Local testing complete!");
@@ -83,8 +83,7 @@ console.log(
 );
 console.log("3. Then try: buildkite-mcp-server --help");
 console.log(
-  "4. If everything works, publish with: npm publish --access public",
+  "4. If everything works, publish with: npm publish",
 );
 
-// Explicitly exit the process to prevent hanging
 process.exit(0);
