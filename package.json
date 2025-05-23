@@ -2,12 +2,12 @@
   "name": "@buildkite/buildkite-mcp-server",
   "version": "1.0.0",
   "description": "NPM wrapper for Buildkite MCP Server binary",
-  "main": "index.js",
+  "main": "node/index.js",
   "bin": {
-    "buildkite-mcp-server": "bin/run.js"
+    "buildkite-mcp-server": "node/bin/run.js"
   },
   "scripts": {
-    "postinstall": "node install.js"
+    "postinstall": "node node/install.js"
   },
   "keywords": [
     "buildkite",
@@ -17,9 +17,9 @@
   "author": "Buildkite",
   "license": "MIT",
   "files": [
-    "bin",
-    "install.js",
-    "index.js"
+    "node/bin",
+    "node/install.js",
+    "node/index.js"
   ],
   "engines": {
     "node": ">=16.0.0"
