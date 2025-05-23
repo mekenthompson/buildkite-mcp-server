@@ -25,8 +25,8 @@ if (packageJson.name !== "@buildkite/buildkite-mcp-server") {
 // Test 1: Check all required files exist
 console.log("📁 Checking required files...");
 const requiredFiles = [
-  { path: path.join(__dirname, "install.js"), display: "node/install.js" },
-  { path: path.join(__dirname, "bin/run.js"), display: "node/bin/run.js" }
+  { path: path.join(__dirname, "install.js"), display: "install.js" },
+  { path: path.join(__dirname, "bin/run.js"), display: "bin/run.js" },
 ];
 
 for (const file of requiredFiles) {
@@ -43,9 +43,9 @@ if (process.platform !== "win32") {
   try {
     const binPath = path.join(__dirname, "bin/run.js");
     fs.chmodSync(binPath, "755");
-    console.log("✅ Made node/bin/run.js executable");
+    console.log("✅ Made bin/run.js executable");
   } catch (err) {
-    console.log("⚠️  Could not make node/bin/run.js executable:", err.message);
+    console.log("⚠️  Could not make bin/run.js executable:", err.message);
     process.exit(1);
   }
 }
@@ -55,7 +55,7 @@ console.log("\n🔧 Testing install script...");
 try {
   const { execSync } = require("child_process");
   console.log("Executing install script directly...");
-  execSync(`node ${path.join(__dirname, "install.js")}`, { stdio: 'inherit' });
+  execSync(`node ${path.join(__dirname, "install.js")}`, { stdio: "inherit" });
   console.log("✅ Install script executed successfully");
 } catch (err) {
   console.log("❌ Install script failed:", err.message);
@@ -82,8 +82,6 @@ console.log(
   "2. Test with: npm pack && npm install -g ./buildkite-buildkite-mcp-server-*.tgz",
 );
 console.log("3. Then try: buildkite-mcp-server --help");
-console.log(
-  "4. If everything works, publish with: npm publish",
-);
+console.log("4. If everything works, publish with: npm publish");
 
 process.exit(0);

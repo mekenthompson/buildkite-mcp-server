@@ -6,8 +6,8 @@
     "buildkite-mcp-server": "node/bin/run.js"
   },
   "scripts": {
-    "local": "node node/local.js",
-    "postinstall": "node node/install.js"
+    "local": "node local.js",
+    "postinstall": "node install.js"
   },
   "keywords": [
     "buildkite",
@@ -17,8 +17,8 @@
   "author": "Buildkite",
   "license": "MIT",
   "files": [
-    "node/bin",
-    "node/install.js"
+    "bin",
+    "install.js"
   ],
   "engines": {
     "node": ">=16.0.0"
