@@ -6,7 +6,7 @@ const path = require("path");
 const https = require("https");
 const os = require("os");
 const { createGunzip } = require("zlib");
-const tar = require("tar");
+const { pipeline } = require("stream");
 
 // Configuration
 const REPO_OWNER = "buildkite";
@@ -60,15 +60,20 @@ https
         }
 
         // Look for the right asset based on platform and architecture
-        // - buildkite-mcp-server_darwin_amd64.tar.gz
-        // - buildkite-mcp-server_linux_amd64.tar.gz
-        // - buildkite-mcp-server_windows_amd64.zip
+        // Buildkite's actual naming pattern (from their releases):
+        // - buildkite-mcp-server_Darwin_arm64.tar.gz
+        // - buildkite-mcp-server_Darwin_x86_64.tar.gz
+        // - buildkite-mcp-server_Linux_arm64.tar.gz
+        // - buildkite-mcp-server_Linux_x86_64.tar.gz
+        // - buildkite-mcp-server_Windows_arm64.zip
+        // - buildkite-mcp-server_Windows_x86_64.zip
+
+        const platformName = getPlatformName();
+        const archName = getArchName();
+        const extension = platformName === "Windows" ? "zip" : "tar.gz";
 
         const possibleNames = [
-          `${BINARY_NAME}_${platform}_${arch}.tar.gz`,
-          `${BINARY_NAME}_${platform}_${arch}.zip`,
-          `${BINARY_NAME}-${platform}-${arch}.tar.gz`,
-          `${BINARY_NAME}-${platform}-${arch}.zip`,
+          `${BINARY_NAME}_${platformName}_${archName}.${extension}`,
         ];
 
         let asset = null;
@@ -118,26 +123,12 @@ function downloadAndExtract(url, fileName, destPath) {
         file.close(() => {
           try {
             if (fileName.endsWith(".tar.gz")) {
-              // Extract tar.gz
-              tar.extract({
-                file: tempFile,
-                cwd: binaryDir,
-                sync: true,
-              });
-
-              // Find the extracted binary (might be in a subdirectory)
-              const extractedBinary = findBinary(
-                binaryDir,
-                BINARY_NAME + extension,
-              );
-              if (extractedBinary && extractedBinary !== destPath) {
-                fs.renameSync(extractedBinary, destPath);
-              }
+              extractTarGz(tempFile, binaryDir, destPath);
             } else if (fileName.endsWith(".zip")) {
-              // For ZIP files, you'd need a zip extraction library
-              // For now, let's assume tar.gz is the primary format
-              console.error("ZIP extraction not implemented yet");
-              process.exit(1);
+              extractZip(tempFile, binaryDir, destPath);
+            } else {
+              // Assume it's a raw binary
+              fs.copyFileSync(tempFile, destPath);
             }
 
             // Make the binary executable
@@ -162,18 +153,149 @@ function downloadAndExtract(url, fileName, destPath) {
     });
 }
 
+function extractTarGz(tarPath, extractDir, finalBinaryPath) {
+  // Simple tar.gz extraction using only built-in modules
+  // This is a basic implementation that works for simple tarballs
+
+  const readStream = fs.createReadStream(tarPath);
+  const gunzip = createGunzip();
+
+  let buffer = Buffer.alloc(0);
+
+  pipeline(readStream, gunzip, (err) => {
+    if (err) {
+      console.error("Error decompressing file:", err);
+      process.exit(1);
+    }
+  });
+
+  gunzip.on("data", (chunk) => {
+    buffer = Buffer.concat([buffer, chunk]);
+  });
+
+  gunzip.on("end", () => {
+    try {
+      // Simple tar parsing - this works for basic tarballs created by GoReleaser
+      parseTar(buffer, extractDir, finalBinaryPath);
+    } catch (error) {
+      console.error("Error parsing tar file:", error);
+      console.log(
+        "Consider installing the tar dependency for better compatibility:",
+      );
+      console.log("npm install tar");
+      process.exit(1);
+    }
+  });
+}
+
+function extractZip(zipPath, extractDir, finalBinaryPath) {
+  // For Windows ZIP files, we'll use a simple approach
+  // In a production environment, you might want to use a proper ZIP library
+
+  try {
+    // Try using built-in unzip if available (Windows PowerShell or macOS/Linux unzip)
+    const binaryName = path.basename(finalBinaryPath);
+
+    if (os.platform() === "win32") {
+      // Use PowerShell on Windows
+      execSync(
+        `powershell -command "Expand-Archive -Path '${zipPath}' -DestinationPath '${extractDir}' -Force"`,
+        { stdio: "inherit" },
+      );
+    } else {
+      // Use unzip command on Unix-like systems
+      execSync(`unzip -o '${zipPath}' -d '${extractDir}'`, {
+        stdio: "inherit",
+      });
+    }
+
+    // Find the extracted binary
+    const extractedBinary = findBinary(extractDir, binaryName);
+    if (extractedBinary && extractedBinary !== finalBinaryPath) {
+      fs.renameSync(extractedBinary, finalBinaryPath);
+    } else if (!fs.existsSync(finalBinaryPath)) {
+      throw new Error(`Binary ${binaryName} not found after extraction`);
+    }
+  } catch (error) {
+    console.error("Error extracting ZIP file:", error);
+    console.log(
+      "You may need to extract the ZIP file manually and place the binary in the bin directory",
+    );
+    process.exit(1);
+  }
+}
+
 function findBinary(dir, binaryName) {
-  const files = fs.readdirSync(dir, { recursive: true });
+  try {
+    const files = fs.readdirSync(dir, { recursive: true });
+    for (const file of files) {
+      const fullPath = path.join(dir, file);
+      if (
+        path.basename(fullPath) === binaryName &&
+        fs.statSync(fullPath).isFile()
+      ) {
+        return fullPath;
+      }
+    }
+  } catch (error) {
+    // Fallback for older Node.js versions that don't support recursive option
+    return findBinaryRecursive(dir, binaryName);
+  }
+  return null;
+}
+
+function findBinaryRecursive(dir, binaryName) {
+  const files = fs.readdirSync(dir);
   for (const file of files) {
     const fullPath = path.join(dir, file);
-    if (
-      path.basename(fullPath) === binaryName &&
-      fs.statSync(fullPath).isFile()
-    ) {
+    const stat = fs.statSync(fullPath);
+
+    if (stat.isFile() && path.basename(fullPath) === binaryName) {
       return fullPath;
+    } else if (stat.isDirectory()) {
+      const found = findBinaryRecursive(fullPath, binaryName);
+      if (found) return found;
     }
   }
   return null;
+}
+
+function parseTar(buffer, extractDir, finalBinaryPath) {
+  // Very basic tar parser - this might not work for all tar files
+  // For production use, consider using the 'tar' npm package
+
+  let offset = 0;
+  const binaryName = path.basename(finalBinaryPath);
+
+  while (offset < buffer.length) {
+    if (offset + 512 > buffer.length) break;
+
+    const header = buffer.slice(offset, offset + 512);
+
+    // Check if this is a valid tar header (simple check)
+    const nameBytes = header.slice(0, 100);
+    const name = nameBytes.toString("utf8").replace(/\0.*$/, "");
+
+    if (!name) break;
+
+    const sizeBytes = header.slice(124, 136);
+    const sizeStr = sizeBytes.toString("utf8").replace(/\0.*$/, "").trim();
+    const size = parseInt(sizeStr, 8) || 0;
+
+    offset += 512; // Skip header
+
+    if (name.endsWith(binaryName) || name === binaryName) {
+      // Found our binary!
+      const fileData = buffer.slice(offset, offset + size);
+      fs.writeFileSync(finalBinaryPath, fileData);
+      return;
+    }
+
+    // Skip to next file (round up to 512-byte boundary)
+    offset += Math.ceil(size / 512) * 512;
+  }
+
+  throw new Error(`Binary ${binaryName} not found in tar archive`);
 }
 
 function getPlatform() {
@@ -186,12 +308,34 @@ function getPlatform() {
   throw new Error(`Unsupported platform: ${platform}`);
 }
 
+function getPlatformName() {
+  // For Buildkite's naming convention (capitalized)
+  const platform = os.platform();
+
+  if (platform === "darwin") return "Darwin";
+  if (platform === "win32") return "Windows";
+  if (platform === "linux") return "Linux";
+
+  throw new Error(`Unsupported platform: ${platform}`);
+}
+
 function getArch() {
   const arch = os.arch();
 
   if (arch === "x64") return "amd64";
   if (arch === "arm64") return "arm64";
   if (arch === "ia32") return "386";
+
+  throw new Error(`Unsupported architecture: ${arch}`);
+}
+
+function getArchName() {
+  // For Buildkite's naming convention
+  const arch = os.arch();
+
+  if (arch === "x64") return "x86_64";
+  if (arch === "arm64") return "arm64";
+  if (arch === "ia32") return "x86";
 
   throw new Error(`Unsupported architecture: ${arch}`);
 }
