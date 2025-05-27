@@ -3,6 +3,7 @@ package buildkite
 import (
 	"context"
 	"fmt"
+	"io"
 	"net/http"
 
 	"github.com/buildkite/buildkite-mcp-server/internal/buildkite/joblogs"
