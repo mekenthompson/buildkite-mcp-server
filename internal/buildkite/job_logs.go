@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	"github.com/buildkite/buildkite-mcp-server/internal/buildkite/joblogs"
+	"github.com/buildkite/buildkite-mcp-server/internal/tokens"
 	"github.com/buildkite/buildkite-mcp-server/internal/trace"
 	"github.com/buildkite/go-buildkite/v4"
 	"github.com/mark3labs/mcp-go/mcp"
@@ -88,6 +89,10 @@ func GetJobLogs(ctx context.Context, client *buildkite.Client) (tool mcp.Tool, h
 			if err != nil {
 				return nil, fmt.Errorf("failed to process job log: %w", err)
 			}
+
+			tokens := tokens.EstimateTokens(processedLog)
+
+			span.SetAttributes(attribute.Int("tokens", tokens))
 
 			return mcp.NewToolResultText(processedLog), nil
 		}
