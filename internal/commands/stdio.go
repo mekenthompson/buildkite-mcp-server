@@ -16,7 +16,7 @@ func (c *StdioCmd) Run(ctx context.Context, globals *Globals) error {
 	// Create a client adapter so that we can use a mock or true client
 	clientAdapter := &buildkite.BuildkiteClientAdapter{Client: globals.Client}
 	s := server.NewMCPServer(
-		"github-mcp-server",
+		"buildkite-mcp-server",
 		globals.Version,
 		server.WithResourceCapabilities(true, true),
 		server.WithHooks(trace.NewHooks()),
