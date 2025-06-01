@@ -59,7 +59,7 @@ func TestListClusterQueues(t *testing.T) {
 	assert.NoError(err)
 
 	textContent := getTextResult(t, result)
-	assert.Equal("[{\"id\":\"queue-id\",\"created_by\":{}}]", textContent.Text)
+	assert.Equal(`{"headers":{"Link":""},"items":[{"id":"queue-id","created_by":{}}]}`, textContent.Text)
 }
 
 func TestGetClusterQueue(t *testing.T) {

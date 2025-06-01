@@ -5,6 +5,11 @@ import (
 	"github.com/mark3labs/mcp-go/mcp"
 )
 
+type PaginatedResult[T any] struct {
+	Headers map[string]string `json:"headers"`
+	Items   []T               `json:"items"`
+}
+
 func optionalPaginationParams(r mcp.CallToolRequest) (buildkite.ListOptions, error) {
 	page := r.GetInt("page", 1)
 	perPage := r.GetInt("perPage", 1)

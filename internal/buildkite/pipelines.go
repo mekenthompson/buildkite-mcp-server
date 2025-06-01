@@ -66,7 +66,14 @@ func ListPipelines(ctx context.Context, client PipelinesClient) (tool mcp.Tool, 
 				return mcp.NewToolResultError(fmt.Sprintf("failed to get issue: %s", string(body))), nil
 			}
 
-			r, err := json.Marshal(&pipelines)
+			result := PaginatedResult[buildkite.Pipeline]{
+				Items: pipelines,
+				Headers: map[string]string{
+					"Link": resp.Header.Get("Link"),
+				},
+			}
+
+			r, err := json.Marshal(&result)
 			if err != nil {
 				return nil, fmt.Errorf("failed to marshal pipelines: %w", err)
 			}

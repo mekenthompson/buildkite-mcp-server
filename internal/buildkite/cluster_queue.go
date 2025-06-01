@@ -72,7 +72,14 @@ func ListClusterQueues(ctx context.Context, client ClusterQueuesClient) (tool mc
 				return mcp.NewToolResultText("No clusters found"), nil
 			}
 
-			r, err := json.Marshal(queues)
+			result := PaginatedResult[buildkite.ClusterQueue]{
+				Items: queues,
+				Headers: map[string]string{
+					"Link": resp.Header.Get("Link"),
+				},
+			}
+
+			r, err := json.Marshal(&result)
 			if err != nil {
 				return nil, fmt.Errorf("failed to marshal cluster queues response: %w", err)
 			}

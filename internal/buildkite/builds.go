@@ -77,7 +77,14 @@ func ListBuilds(ctx context.Context, client BuildsClient) (tool mcp.Tool, handle
 				return mcp.NewToolResultError(fmt.Sprintf("failed to get issue: %s", string(body))), nil
 			}
 
-			r, err := json.Marshal(&builds)
+			result := PaginatedResult[buildkite.Build]{
+				Items: builds,
+				Headers: map[string]string{
+					"Link": resp.Header.Get("Link"),
+				},
+			}
+
+			r, err := json.Marshal(&result)
 			if err != nil {
 				return nil, fmt.Errorf("failed to marshal builds: %w", err)
 			}
