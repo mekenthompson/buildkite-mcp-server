@@ -62,7 +62,14 @@ func ListClusters(ctx context.Context, client ClustersClient) (tool mcp.Tool, ha
 				return mcp.NewToolResultText("No clusters found"), nil
 			}
 
-			r, err := json.Marshal(clusters)
+			result := PaginatedResult[buildkite.Cluster]{
+				Items: clusters,
+				Headers: map[string]string{
+					"Link": resp.Header.Get("Link"),
+				},
+			}
+
+			r, err := json.Marshal(&result)
 			if err != nil {
 				return nil, fmt.Errorf("failed to marshal clusters response: %w", err)
 			}

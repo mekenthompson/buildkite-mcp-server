@@ -102,8 +102,8 @@ func TestListBuilds(t *testing.T) {
 
 	textContent := getTextResult(t, result)
 
-	assert.Equal(`[{"id":"123","number":1,"state":"running","author":{},"created_at":"0001-01-01T00:00:00Z","creator":{"avatar_url":"","created_at":null,"email":"","id":"","name":""}}]`, textContent.Text)
-	
+	assert.Equal(`{"headers":{"Link":""},"items":[{"id":"123","number":1,"state":"running","author":{},"created_at":"0001-01-01T00:00:00Z","creator":{"avatar_url":"","created_at":null,"email":"","id":"","name":""}}]}`, textContent.Text)
+
 	// Verify default pagination parameters - ensure they are set to 1 per page
 	assert.NotNil(capturedOptions)
 	assert.Equal(1, capturedOptions.Page)
