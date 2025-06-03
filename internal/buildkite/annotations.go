@@ -87,7 +87,14 @@ func ListAnnotations(ctx context.Context, client AnnotationsClient) (tool mcp.To
 				return mcp.NewToolResultError(fmt.Sprintf("failed to list annotations: %s", string(body))), nil
 			}
 
-			r, err := json.Marshal(annotations)
+			result := PaginatedResult[buildkite.Annotation]{
+				Items: annotations,
+				Headers: map[string]string{
+					"Link": resp.Header.Get("Link"),
+				},
+			}
+
+			r, err := json.Marshal(&result)
 			if err != nil {
 				return nil, fmt.Errorf("failed to marshal annotations: %w", err)
 			}

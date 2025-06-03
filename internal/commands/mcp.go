@@ -70,5 +70,8 @@ func BuildkiteTools(ctx context.Context, client *gobuildkite.Client) []server.Se
 	tools = addTool(buildkite.ListArtifacts(ctx, clientAdapter))
 	tools = addTool(buildkite.GetArtifact(ctx, clientAdapter))
 
+	// Annotation tools
+	tools = addTool(buildkite.ListAnnotations(ctx, client.Annotations))
+
 	return tools
 }
