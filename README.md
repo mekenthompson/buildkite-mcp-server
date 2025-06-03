@@ -20,6 +20,7 @@ This is an [Model Context Protocol (MCP)](https://modelcontextprotocol.io/introd
 * `access_token` - Get the details for the API access token that was used to authenticate the request
 * `list_artifacts` - List the artifacts for a Buildkite build
 * `get_artifact` - Get an artifact from a Buildkite build
+* `list_annotations` - List the annotations for a Buildkite build
 
 Example of the `get_pipeline` tool in action.
 
