@@ -4,6 +4,8 @@
 
 This is an [Model Context Protocol (MCP)](https://modelcontextprotocol.io/introduction) server for [Buildkite](https://buildkite.com). The goal is to provide access to information from buildkite about pipelines, builds and jobs to tools such as [Claude Desktop](https://claude.ai/download), [GitHub Copilot](https://github.com/features/copilot) and other tools, or editors.
 
+[![Add to Cursor](https://cursor.com/deeplink/mcp-install-dark.png)](https://cursor.com/install-mcp?name=buildkite&config=eyJjb21tYW5kIjoiZG9ja2VyIHJ1biAtaSAtLXJtIC1lIEJVSUxES0lURV9BUElfVE9LRU4gZ2hjci5pby9idWlsZGtpdGUvYnVpbGRraXRlLW1jcC1zZXJ2ZXIgc3RkaW8iLCJlbnYiOnsiQlVJTERLSVRFX0FQSV9UT0tFTiI6ImJrdWFfeHh4eHh4eHgifX0%3D)
+
 # Tools
 
 * `get_cluster` - Get details of a buildkite cluster in an organization
@@ -28,7 +30,7 @@ Example of the `get_pipeline` tool in action.
 
 ### Production
 
-To ensure the MCP server is run in a secure environment, we recommend running it in a container. 
+To ensure the MCP server is run in a secure environment, we recommend running it in a container.
 
 Pull the pre-built image (recommended):
 
