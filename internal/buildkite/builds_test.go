@@ -108,6 +108,7 @@ func TestListBuilds(t *testing.T) {
 	assert.NotNil(capturedOptions)
 	assert.Equal(1, capturedOptions.Page)
 	assert.Equal(1, capturedOptions.PerPage)
+	assert.Nil(capturedOptions.Branch) // Branch should be nil when not specified
 }
 
 func TestListBuildsWithCustomPagination(t *testing.T) {
@@ -151,4 +152,48 @@ func TestListBuildsWithCustomPagination(t *testing.T) {
 	assert.NotNil(capturedOptions)
 	assert.Equal(3, capturedOptions.Page)
 	assert.Equal(50, capturedOptions.PerPage)
+	assert.Nil(capturedOptions.Branch) // Branch should be nil when not specified
+}
+
+func TestListBuildsWithBranchFilter(t *testing.T) {
+	assert := require.New(t)
+
+	ctx := context.Background()
+	var capturedOptions *buildkite.BuildsListOptions
+	client := &MockBuildsClient{
+		ListByPipelineFunc: func(ctx context.Context, org string, pipeline string, opt *buildkite.BuildsListOptions) ([]buildkite.Build, *buildkite.Response, error) {
+			capturedOptions = opt
+			return []buildkite.Build{
+					{
+						ID:        "123",
+						Number:    1,
+						State:     "running",
+						CreatedAt: &buildkite.Timestamp{},
+					},
+				}, &buildkite.Response{
+					Response: &http.Response{
+						StatusCode: 200,
+					},
+				}, nil
+		},
+	}
+
+	tool, handler := ListBuilds(ctx, client)
+	assert.NotNil(tool)
+	assert.NotNil(handler)
+
+	// Test with branch filter
+	request := createMCPRequest(t, map[string]any{
+		"org":           "org",
+		"pipeline_slug": "pipeline",
+		"branch":        "main",
+	})
+	_, err := handler(ctx, request)
+	assert.NoError(err)
+
+	// Verify branch filter was applied
+	assert.NotNil(capturedOptions)
+	assert.Equal([]string{"main"}, capturedOptions.Branch)
+	assert.Equal(1, capturedOptions.Page)
+	assert.Equal(1, capturedOptions.PerPage)
 }

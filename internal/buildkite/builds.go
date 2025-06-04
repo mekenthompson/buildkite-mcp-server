@@ -30,6 +30,9 @@ func ListBuilds(ctx context.Context, client BuildsClient) (tool mcp.Tool, handle
 				mcp.Required(),
 				mcp.Description("The slug of the pipeline"),
 			),
+			mcp.WithString("branch",
+				mcp.Description("Filter builds by branch name"),
+			),
 			withPagination(),
 			mcp.WithToolAnnotation(mcp.ToolAnnotation{
 				Title:        "List Builds",
@@ -50,6 +53,8 @@ func ListBuilds(ctx context.Context, client BuildsClient) (tool mcp.Tool, handle
 				return mcp.NewToolResultError(err.Error()), nil
 			}
 
+			branch := request.GetString("branch", "")
+
 			paginationParams, err := optionalPaginationParams(request)
 			if err != nil {
 				return mcp.NewToolResultError(err.Error()), nil
@@ -58,13 +63,21 @@ func ListBuilds(ctx context.Context, client BuildsClient) (tool mcp.Tool, handle
 			span.SetAttributes(
 				attribute.String("org", org),
 				attribute.String("pipeline_slug", pipelineSlug),
+				attribute.String("branch", branch),
 				attribute.Int("page", paginationParams.Page),
 				attribute.Int("per_page", paginationParams.PerPage),
 			)
 
-			builds, resp, err := client.ListByPipeline(ctx, org, pipelineSlug, &buildkite.BuildsListOptions{
-				ListOptions: paginationParams,
-			})
+			options := &buildkite.BuildsListOptions{
+				ExcludeJobs:     true,
+				ExcludePipeline: true,
+				ListOptions:     paginationParams,
+			}
+			if branch != "" {
+				options.Branch = []string{branch}
+			}
+
+			builds, resp, err := client.ListByPipeline(ctx, org, pipelineSlug, options)
 			if err != nil {
 				return mcp.NewToolResultError(err.Error()), nil
 			}

@@ -4,8 +4,8 @@ github.com/alecthomas/kong v1.11.0 h1:y++1gI7jf8O7G7l4LZo5ASFhrhJvzc+WgF/arranEm
 github.com/alecthomas/kong v1.11.0/go.mod h1:p2vqieVMeTAnaC83txKtXe8FLke2X07aruPWXyMPQrU=
 github.com/alecthomas/repr v0.4.0 h1:GhI2A8MACjfegCPVq9f1FLvIBS+DrQ2KQBFZP1iFzXc=
 github.com/alecthomas/repr v0.4.0/go.mod h1:Fr0507jx4eOXV7AlPV6AVZLYrLIuIeSOWtW57eE/O/4=
-github.com/buildkite/go-buildkite/v4 v4.1.0 h1:n1f3EAe8/64ju9QjSWJYMjD8++mn1pOLK/tZscD5DKo=
-github.com/buildkite/go-buildkite/v4 v4.1.0/go.mod h1:xlYVIETMCk46KUkmfRoztoIf888KwdY5uZXNinZ1PX0=
+github.com/buildkite/go-buildkite/v4 v4.3.0 h1:skalU8WrzWUGEG8bLA5JPt8B6KJPVymup8k4EsjcWL0=
+github.com/buildkite/go-buildkite/v4 v4.3.0/go.mod h1:fMPu+/7hXzJ7Gy3HpGuVCLgeHqzDdrgHuwQvt8p370I=
 github.com/buildkite/terminal-to-html/v3 v3.16.8 h1:QN/daUob6cmK8GcdKnwn9+YTlPr1vNj+oeAIiJK6fPc=
 github.com/buildkite/terminal-to-html/v3 v3.16.8/go.mod h1:+k1KVKROZocrTLsEQ9PEf9A+8+X8uaVV5iO1ZIOwKYM=
 github.com/cenkalti/backoff v1.1.1-0.20171020064038-309aa717adbf h1:yxlp0s+Sge9UsKEK0Bsvjiopb9XRk+vxylmZ9eGBfm8=
