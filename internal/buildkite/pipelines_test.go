@@ -63,7 +63,7 @@ func TestListPipelines(t *testing.T) {
 
 	textContent := getTextResult(t, result)
 
-	assert.Equal(`{"headers":{"Link":""},"items":[{"id":"123","name":"Test Pipeline","slug":"test-pipeline","created_at":"0001-01-01T00:00:00Z","provider":{"id":"","webhook_url":"","settings":null}}]}`, textContent.Text)
+	assert.Equal(`{"headers":{"Link":""},"items":[{"id":"123","name":"Test Pipeline","slug":"test-pipeline","created_at":"0001-01-01T00:00:00Z","skip_queued_branch_builds":false,"cancel_running_branch_builds":false,"provider":{"id":"","webhook_url":"","settings":null}}]}`, textContent.Text)
 }
 
 func TestGetPipeline(t *testing.T) {
@@ -98,5 +98,5 @@ func TestGetPipeline(t *testing.T) {
 
 	textContent := getTextResult(t, result)
 
-	assert.Equal(`{"id":"123","name":"Test Pipeline","slug":"test-pipeline","created_at":"0001-01-01T00:00:00Z","provider":{"id":"","webhook_url":"","settings":null}}`, textContent.Text)
+	assert.Equal(`{"id":"123","name":"Test Pipeline","slug":"test-pipeline","created_at":"0001-01-01T00:00:00Z","skip_queued_branch_builds":false,"cancel_running_branch_builds":false,"provider":{"id":"","webhook_url":"","settings":null}}`, textContent.Text)
 }

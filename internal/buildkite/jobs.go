@@ -2,6 +2,7 @@ package buildkite
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -14,6 +15,92 @@ import (
 	"github.com/mark3labs/mcp-go/server"
 	"go.opentelemetry.io/otel/attribute"
 )
+
+func GetJobs(ctx context.Context, client BuildsClient) (tool mcp.Tool, handler server.ToolHandlerFunc) {
+	return mcp.NewTool("get_jobs",
+			mcp.WithDescription("Get jobs for a specific build in Buildkite. Optionally filter by job state."),
+			mcp.WithString("org",
+				mcp.Required(),
+				mcp.Description("The organization slug for the owner of the pipeline"),
+			),
+			mcp.WithString("pipeline_slug",
+				mcp.Required(),
+				mcp.Description("The slug of the pipeline"),
+			),
+			mcp.WithString("build_number",
+				mcp.Required(),
+				mcp.Description("The number of the build"),
+			),
+			mcp.WithString("job_state",
+				mcp.Description("Filter jobs by state. Supports actual states (scheduled, running, passed, failed, canceled, skipped, etc.)"),
+			),
+			mcp.WithToolAnnotation(mcp.ToolAnnotation{
+				Title:        "Get Jobs",
+				ReadOnlyHint: mcp.ToBoolPtr(true),
+			}),
+		),
+		func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+			ctx, span := trace.Start(ctx, "buildkite.GetJobs")
+			defer span.End()
+
+			org, err := request.RequireString("org")
+			if err != nil {
+				return mcp.NewToolResultError(err.Error()), nil
+			}
+
+			pipelineSlug, err := request.RequireString("pipeline_slug")
+			if err != nil {
+				return mcp.NewToolResultError(err.Error()), nil
+			}
+
+			buildNumber, err := request.RequireString("build_number")
+			if err != nil {
+				return mcp.NewToolResultError(err.Error()), nil
+			}
+
+			jobStateFilter := request.GetString("job_state", "")
+
+			span.SetAttributes(
+				attribute.String("org", org),
+				attribute.String("pipeline_slug", pipelineSlug),
+				attribute.String("build_number", buildNumber),
+				attribute.String("job_state", jobStateFilter),
+			)
+
+			build, resp, err := client.Get(ctx, org, pipelineSlug, buildNumber, &buildkite.BuildGetOptions{})
+			if err != nil {
+				return mcp.NewToolResultError(err.Error()), nil
+			}
+
+			if resp.StatusCode != http.StatusOK {
+				body, err := io.ReadAll(resp.Body)
+				if err != nil {
+					return nil, fmt.Errorf("failed to read response body: %w", err)
+				}
+				return mcp.NewToolResultError(fmt.Sprintf("failed to get build: %s", string(body))), nil
+			}
+
+			jobs := build.Jobs
+
+			// Filter jobs by state if specified
+			if jobStateFilter != "" {
+				filteredJobs := make([]buildkite.Job, 0)
+				for _, job := range build.Jobs {
+					if job.State == jobStateFilter {
+						filteredJobs = append(filteredJobs, job)
+					}
+				}
+				jobs = filteredJobs
+			}
+
+			r, err := json.Marshal(jobs)
+			if err != nil {
+				return nil, fmt.Errorf("failed to marshal jobs: %w", err)
+			}
+
+			return mcp.NewToolResultText(string(r)), nil
+		}
+}
 
 func GetJobLogs(ctx context.Context, client *buildkite.Client) (tool mcp.Tool, handler server.ToolHandlerFunc) {
 	return mcp.NewTool("get_job_logs",

@@ -16,11 +16,16 @@ This is an [Model Context Protocol (MCP)](https://modelcontextprotocol.io/introd
 * `get_build` - Get a build in Buildkite
 * `current_user` - Get the current user
 * `user_token_organization` - Get the organization associated with the user token used for this request
+* `get_jobs` - Get a list of jobs for a build
 * `get_job_logs` - Get the logs of a job in a Buildkite build
 * `access_token` - Get the details for the API access token that was used to authenticate the request
 * `list_artifacts` - List the artifacts for a Buildkite build
 * `get_artifact` - Get an artifact from a Buildkite build
 * `list_annotations` - List the annotations for a Buildkite build
+* `list_test_runs` - List all test runs for a test suite in Test Engine
+* `get_test_run` - Get a specific test run in Test Engine
+* `get_failed_test_executions` - Get a list of the failed test executions for a run in Test Engine
+* `get_test` - Get a test in Test Engine
 
 Example of the `get_pipeline` tool in action.
 
@@ -28,7 +33,7 @@ Example of the `get_pipeline` tool in action.
 
 ### Production
 
-To ensure the MCP server is run in a secure environment, we recommend running it in a container. 
+To ensure the MCP server is run in a secure environment, we recommend running it in a container.
 
 Pull the pre-built image (recommended):
 

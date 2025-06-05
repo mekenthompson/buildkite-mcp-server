@@ -15,7 +15,7 @@ import (
 )
 
 type BuildsClient interface {
-	Get(ctx context.Context, org, pipelineSlug, buildNumber string, options *buildkite.BuildsListOptions) (buildkite.Build, *buildkite.Response, error)
+	Get(ctx context.Context, org, pipelineSlug, buildNumber string, options *buildkite.BuildGetOptions) (buildkite.Build, *buildkite.Response, error)
 	ListByPipeline(ctx context.Context, org, pipelineSlug string, options *buildkite.BuildsListOptions) ([]buildkite.Build, *buildkite.Response, error)
 }
 
@@ -118,9 +118,9 @@ func ListBuilds(ctx context.Context, client BuildsClient) (tool mcp.Tool, handle
 		}
 }
 
-func GetBuild(ctx context.Context, client BuildsClient) (tool mcp.Tool, handler server.ToolHandlerFunc) {
-	return mcp.NewTool("get_build",
-			mcp.WithDescription("Get a build in Buildkite. Always includes job summary with counts by state. Optionally includes full job details."),
+func GetBuildTestEngineRuns(ctx context.Context, client BuildsClient) (tool mcp.Tool, handler server.ToolHandlerFunc) {
+	return mcp.NewTool("get_build_test_engine_runs",
+			mcp.WithDescription("Get test engine runs data for a specific build in Buildkite"),
 			mcp.WithString("org",
 				mcp.Required(),
 				mcp.Description("The organization slug for the owner of the pipeline"),
@@ -133,11 +133,80 @@ func GetBuild(ctx context.Context, client BuildsClient) (tool mcp.Tool, handler 
 				mcp.Required(),
 				mcp.Description("The number of the build"),
 			),
-			mcp.WithString("exclude_jobs",
-				mcp.Description("Exclude full job details from the response, only return job summary. Default: true"),
+			mcp.WithToolAnnotation(mcp.ToolAnnotation{
+				Title:        "Get Build Test Engine Runs",
+				ReadOnlyHint: mcp.ToBoolPtr(true),
+			}),
+		),
+		func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+			ctx, span := trace.Start(ctx, "buildkite.GetBuildTestEngineRuns")
+			defer span.End()
+
+			org, err := request.RequireString("org")
+			if err != nil {
+				return mcp.NewToolResultError(err.Error()), nil
+			}
+
+			pipelineSlug, err := request.RequireString("pipeline_slug")
+			if err != nil {
+				return mcp.NewToolResultError(err.Error()), nil
+			}
+
+			buildNumber, err := request.RequireString("build_number")
+			if err != nil {
+				return mcp.NewToolResultError(err.Error()), nil
+			}
+
+			span.SetAttributes(
+				attribute.String("org", org),
+				attribute.String("pipeline_slug", pipelineSlug),
+				attribute.String("build_number", buildNumber),
+			)
+
+			build, resp, err := client.Get(ctx, org, pipelineSlug, buildNumber, &buildkite.BuildGetOptions{
+				IncludeTestEngine: true,
+			})
+			if err != nil {
+				return mcp.NewToolResultError(err.Error()), nil
+			}
+
+			if resp.StatusCode != http.StatusOK {
+				body, err := io.ReadAll(resp.Body)
+				if err != nil {
+					return nil, fmt.Errorf("failed to read response body: %w", err)
+				}
+				return mcp.NewToolResultError(fmt.Sprintf("failed to get build: %s", string(body))), nil
+			}
+
+			// Extract just the test engine runs data
+			var testEngineRuns []buildkite.TestEngineRun
+			if build.TestEngine != nil {
+				testEngineRuns = build.TestEngine.Runs
+			}
+
+			r, err := json.Marshal(&testEngineRuns)
+			if err != nil {
+				return nil, fmt.Errorf("failed to marshal test engine runs: %w", err)
+			}
+
+			return mcp.NewToolResultText(string(r)), nil
+		}
+}
+
+func GetBuild(ctx context.Context, client BuildsClient) (tool mcp.Tool, handler server.ToolHandlerFunc) {
+	return mcp.NewTool("get_build",
+			mcp.WithDescription("Get a build in Buildkite. Includes job summary with counts by state."),
+			mcp.WithString("org",
+				mcp.Required(),
+				mcp.Description("The organization slug for the owner of the pipeline"),
 			),
-			mcp.WithString("job_state",
-				mcp.Description("Filter jobs by state. Supports actual states (scheduled, running, passed, failed, canceled, skipped, etc.). When used, exclude_jobs defaults to false"),
+			mcp.WithString("pipeline_slug",
+				mcp.Required(),
+				mcp.Description("The slug of the pipeline"),
+			),
+			mcp.WithString("build_number",
+				mcp.Required(),
+				mcp.Description("The number of the build"),
 			),
 			mcp.WithToolAnnotation(mcp.ToolAnnotation{
 				Title:        "Get Build",
@@ -163,26 +232,15 @@ func GetBuild(ctx context.Context, client BuildsClient) (tool mcp.Tool, handler 
 				return mcp.NewToolResultError(err.Error()), nil
 			}
 
-			// Get job_state filter parameter
-			jobStateFilter := request.GetString("job_state", "")
-
-			// Get exclude_jobs parameter - default to false when filtering by job state, true otherwise
-			defaultExclude := "true"
-			if jobStateFilter != "" {
-				defaultExclude = "false"
-			}
-			excludeStr := request.GetString("exclude_jobs", defaultExclude)
-			excludeJobsParam := excludeStr == "true" || excludeStr == "1"
-
 			span.SetAttributes(
 				attribute.String("org", org),
 				attribute.String("pipeline_slug", pipelineSlug),
 				attribute.String("build_number", buildNumber),
-				attribute.Bool("exclude_jobs", excludeJobsParam),
-				attribute.String("job_state", jobStateFilter),
 			)
 
-			build, resp, err := client.Get(ctx, org, pipelineSlug, buildNumber, &buildkite.BuildsListOptions{})
+			build, resp, err := client.Get(ctx, org, pipelineSlug, buildNumber, &buildkite.BuildGetOptions{
+				IncludeTestEngine: true,
+			})
 			if err != nil {
 				return mcp.NewToolResultError(err.Error()), nil
 			}
@@ -209,27 +267,12 @@ func GetBuild(ctx context.Context, client BuildsClient) (tool mcp.Tool, handler 
 				jobSummary.ByState[job.State]++
 			}
 
-			// Create build with summary
+			// Create build with summary - always exclude job details
 			buildWithSummary := BuildWithSummary{
 				Build:      build,
 				JobSummary: jobSummary,
 			}
-
-			// Exclude full job details if requested
-			if excludeJobsParam {
-				buildWithSummary.Build.Jobs = nil
-			} else {
-				// Filter jobs by state if specified
-				if jobStateFilter != "" {
-					filteredJobs := make([]buildkite.Job, 0)
-					for _, job := range build.Jobs {
-						if job.State == jobStateFilter {
-							filteredJobs = append(filteredJobs, job)
-						}
-					}
-					buildWithSummary.Build.Jobs = filteredJobs
-				}
-			}
+			buildWithSummary.Build.Jobs = nil
 
 			r, err := json.Marshal(&buildWithSummary)
 			if err != nil {
@@ -239,3 +282,5 @@ func GetBuild(ctx context.Context, client BuildsClient) (tool mcp.Tool, handler 
 			return mcp.NewToolResultText(string(r)), nil
 		}
 }
+
+
