@@ -59,6 +59,12 @@ func TestGetJobs(t *testing.T) {
 	assert.Contains(textContentAll.Text, `"job4"`)
 	assert.Contains(textContentAll.Text, `"job5"`)
 	assert.Contains(textContentAll.Text, `"job6"`)
+	// Should always have pagination metadata (default page size 25)
+	assert.Contains(textContentAll.Text, `"page":1`)
+	assert.Contains(textContentAll.Text, `"per_page":25`)
+	assert.Contains(textContentAll.Text, `"total":6`)
+	assert.Contains(textContentAll.Text, `"has_next":false`)
+	assert.Contains(textContentAll.Text, `"has_prev":false`)
 }
 
 func TestGetJobsWithStateFilter(t *testing.T) {
@@ -111,6 +117,12 @@ func TestGetJobsWithStateFilter(t *testing.T) {
 	assert.NotContains(textContentPassed.Text, `"job3"`)
 	assert.NotContains(textContentPassed.Text, `"job4"`)
 	assert.NotContains(textContentPassed.Text, `"job6"`)
+	// Should always have pagination metadata (default page size 25)
+	assert.Contains(textContentPassed.Text, `"page":1`)
+	assert.Contains(textContentPassed.Text, `"per_page":25`)
+	assert.Contains(textContentPassed.Text, `"total":2`)
+	assert.Contains(textContentPassed.Text, `"has_next":false`)
+	assert.Contains(textContentPassed.Text, `"has_prev":false`)
 
 	// Test filtering by "failed" state
 	requestFailed := createMCPRequest(t, map[string]any{
@@ -130,6 +142,12 @@ func TestGetJobsWithStateFilter(t *testing.T) {
 	assert.NotContains(textContentFailed.Text, `"job4"`)
 	assert.NotContains(textContentFailed.Text, `"job5"`)
 	assert.NotContains(textContentFailed.Text, `"job6"`)
+	// Should always have pagination metadata (default page size 25)
+	assert.Contains(textContentFailed.Text, `"page":1`)
+	assert.Contains(textContentFailed.Text, `"per_page":25`)
+	assert.Contains(textContentFailed.Text, `"total":1`)
+	assert.Contains(textContentFailed.Text, `"has_next":false`)
+	assert.Contains(textContentFailed.Text, `"has_prev":false`)
 
 	// Test filtering by "running" state
 	requestRunning := createMCPRequest(t, map[string]any{
@@ -149,6 +167,12 @@ func TestGetJobsWithStateFilter(t *testing.T) {
 	assert.NotContains(textContentRunning.Text, `"job4"`)
 	assert.NotContains(textContentRunning.Text, `"job5"`)
 	assert.NotContains(textContentRunning.Text, `"job6"`)
+	// Should always have pagination metadata (default page size 25)
+	assert.Contains(textContentRunning.Text, `"page":1`)
+	assert.Contains(textContentRunning.Text, `"per_page":25`)
+	assert.Contains(textContentRunning.Text, `"total":1`)
+	assert.Contains(textContentRunning.Text, `"has_next":false`)
+	assert.Contains(textContentRunning.Text, `"has_prev":false`)
 }
 
 func TestGetJobsMissingParameters(t *testing.T) {
@@ -199,6 +223,124 @@ func TestGetJobsMissingParameters(t *testing.T) {
 	errorContent, ok = resultMissingBuild.Content[0].(mcp.TextContent)
 	assert.True(ok)
 	assert.Contains(errorContent.Text, "build_number")
+}
+
+func TestGetJobsPagination(t *testing.T) {
+	assert := require.New(t)
+
+	ctx := context.Background()
+	client := &MockBuildsClient{
+		GetFunc: func(ctx context.Context, org string, pipeline string, id string, opt *buildkite.BuildGetOptions) (buildkite.Build, *buildkite.Response, error) {
+			// Create a build with 6 jobs to test pagination
+			return buildkite.Build{
+					ID:        "123",
+					Number:    1,
+					State:     "finished",
+					CreatedAt: &buildkite.Timestamp{},
+					Jobs: []buildkite.Job{
+						{ID: "job1", State: "passed", Agent: buildkite.Agent{ID: "agent1", Name: "test-agent-1"}},
+						{ID: "job2", State: "failed", Agent: buildkite.Agent{ID: "agent2", Name: "test-agent-2"}},
+						{ID: "job3", State: "running", Agent: buildkite.Agent{ID: "agent3", Name: "test-agent-3"}},
+						{ID: "job4", State: "waiting"},
+						{ID: "job5", State: "passed", Agent: buildkite.Agent{ID: "agent5", Name: "test-agent-5"}},
+						{ID: "job6", State: "canceled"},
+					},
+				}, &buildkite.Response{
+					Response: &http.Response{
+						StatusCode: 200,
+					},
+				}, nil
+		},
+	}
+
+	tool, handler := GetJobs(ctx, client)
+	assert.NotNil(tool)
+	assert.NotNil(handler)
+
+	// Test first page with page size of 2
+	requestFirstPage := createMCPRequest(t, map[string]any{
+		"org":           "org",
+		"pipeline_slug": "pipeline",
+		"build_number":  "1",
+		"page":          float64(1),
+		"perPage":       float64(2),
+	})
+	resultFirstPage, err := handler(ctx, requestFirstPage)
+	assert.NoError(err)
+
+	textContentFirstPage := getTextResult(t, resultFirstPage)
+	// Should contain first 2 jobs
+	assert.Contains(textContentFirstPage.Text, `"job1"`)
+	assert.Contains(textContentFirstPage.Text, `"job2"`)
+	assert.NotContains(textContentFirstPage.Text, `"job3"`)
+	assert.NotContains(textContentFirstPage.Text, `"job4"`)
+	// Should have pagination metadata
+	assert.Contains(textContentFirstPage.Text, `"page":1`)
+	assert.Contains(textContentFirstPage.Text, `"per_page":2`)
+	assert.Contains(textContentFirstPage.Text, `"total":6`)
+	assert.Contains(textContentFirstPage.Text, `"has_next":true`)
+	assert.Contains(textContentFirstPage.Text, `"has_prev":false`)
+
+	// Test second page with page size of 2
+	requestSecondPage := createMCPRequest(t, map[string]any{
+		"org":           "org",
+		"pipeline_slug": "pipeline",
+		"build_number":  "1",
+		"page":          float64(2),
+		"perPage":       float64(2),
+	})
+	resultSecondPage, err := handler(ctx, requestSecondPage)
+	assert.NoError(err)
+
+	textContentSecondPage := getTextResult(t, resultSecondPage)
+	// Should contain next 2 jobs
+	assert.NotContains(textContentSecondPage.Text, `"job1"`)
+	assert.NotContains(textContentSecondPage.Text, `"job2"`)
+	assert.Contains(textContentSecondPage.Text, `"job3"`)
+	assert.Contains(textContentSecondPage.Text, `"job4"`)
+	// Should have pagination metadata
+	assert.Contains(textContentSecondPage.Text, `"page":2`)
+	assert.Contains(textContentSecondPage.Text, `"per_page":2`)
+	assert.Contains(textContentSecondPage.Text, `"total":6`)
+	assert.Contains(textContentSecondPage.Text, `"has_next":true`)
+	assert.Contains(textContentSecondPage.Text, `"has_prev":true`)
+
+	// Test last page
+	requestLastPage := createMCPRequest(t, map[string]any{
+		"org":           "org",
+		"pipeline_slug": "pipeline",
+		"build_number":  "1",
+		"page":          float64(3),
+		"perPage":       float64(2),
+	})
+	resultLastPage, err := handler(ctx, requestLastPage)
+	assert.NoError(err)
+
+	textContentLastPage := getTextResult(t, resultLastPage)
+	// Should contain last 2 jobs
+	assert.Contains(textContentLastPage.Text, `"job5"`)
+	assert.Contains(textContentLastPage.Text, `"job6"`)
+	// Should have pagination metadata
+	assert.Contains(textContentLastPage.Text, `"page":3`)
+	assert.Contains(textContentLastPage.Text, `"per_page":2`)
+	assert.Contains(textContentLastPage.Text, `"total":6`)
+	assert.Contains(textContentLastPage.Text, `"has_next":false`)
+	assert.Contains(textContentLastPage.Text, `"has_prev":true`)
+
+	// Test page beyond available data
+	requestBeyond := createMCPRequest(t, map[string]any{
+		"org":           "org",
+		"pipeline_slug": "pipeline",
+		"build_number":  "1",
+		"page":          float64(5),
+		"perPage":       float64(2),
+	})
+	resultBeyond, err := handler(ctx, requestBeyond)
+	assert.NoError(err)
+
+	textContentBeyond := getTextResult(t, resultBeyond)
+	// Should contain empty items array
+	assert.Contains(textContentBeyond.Text, `"items":[]`)
 }
 
 func TestGetJobLogs(t *testing.T) {

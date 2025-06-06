@@ -36,6 +36,7 @@ func GetFailedTestExecutions(ctx context.Context, client TestExecutionsClient) (
 			mcp.WithBoolean("include_failure_expanded",
 				mcp.Description("Include the expanded failure details such as full error messages and stack traces. This can be used to explain and diganose the cause of test failures."),
 			),
+			withClientSidePagination(),
 			mcp.WithToolAnnotation(mcp.ToolAnnotation{
 				Title:        "Get Failed Test Executions",
 				ReadOnlyHint: mcp.ToBoolPtr(true),
@@ -62,11 +63,16 @@ func GetFailedTestExecutions(ctx context.Context, client TestExecutionsClient) (
 
 			includeFailureExpanded := request.GetBool("include_failure_expanded", false)
 
+			// Get client-side pagination parameters (always enabled)
+			paginationParams := getClientSidePaginationParams(request)
+
 			span.SetAttributes(
 				attribute.String("org", org),
 				attribute.String("test_suite_slug", testSuiteSlug),
 				attribute.String("run_id", runID),
 				attribute.Bool("include_failure_expanded", includeFailureExpanded),
+				attribute.Int("page", paginationParams.Page),
+				attribute.Int("per_page", paginationParams.PerPage),
 			)
 
 			options := &buildkite.FailedExecutionsOptions{
@@ -86,7 +92,9 @@ func GetFailedTestExecutions(ctx context.Context, client TestExecutionsClient) (
 				return mcp.NewToolResultError(fmt.Sprintf("failed to get failed executions: %s", string(body))), nil
 			}
 
-			r, err := json.Marshal(&failedExecutions)
+			// Always apply client-side pagination
+			result := applyClientSidePagination(failedExecutions, paginationParams)
+			r, err := json.Marshal(&result)
 			if err != nil {
 				return nil, fmt.Errorf("failed to marshal failed executions: %w", err)
 			}

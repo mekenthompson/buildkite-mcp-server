@@ -16,6 +16,22 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 )
 
+// withJobsPagination adds client-side pagination options to a tool with a max of 50 per page
+func withJobsPagination() mcp.ToolOption {
+	return func(tool *mcp.Tool) {
+		mcp.WithNumber("page",
+			mcp.Description("Page number for pagination (min 1)"),
+			mcp.Min(1),
+		)(tool)
+
+		mcp.WithNumber("perPage",
+			mcp.Description("Results per page for pagination (min 1, max 50)"),
+			mcp.Min(1),
+			mcp.Max(50),
+		)(tool)
+	}
+}
+
 func GetJobs(ctx context.Context, client BuildsClient) (tool mcp.Tool, handler server.ToolHandlerFunc) {
 	return mcp.NewTool("get_jobs",
 			mcp.WithDescription("Get jobs for a specific build in Buildkite. Optionally filter by job state."),
@@ -34,6 +50,7 @@ func GetJobs(ctx context.Context, client BuildsClient) (tool mcp.Tool, handler s
 			mcp.WithString("job_state",
 				mcp.Description("Filter jobs by state. Supports actual states (scheduled, running, passed, failed, canceled, skipped, etc.)"),
 			),
+			withJobsPagination(),
 			mcp.WithToolAnnotation(mcp.ToolAnnotation{
 				Title:        "Get Jobs",
 				ReadOnlyHint: mcp.ToBoolPtr(true),
@@ -60,11 +77,16 @@ func GetJobs(ctx context.Context, client BuildsClient) (tool mcp.Tool, handler s
 
 			jobStateFilter := request.GetString("job_state", "")
 
+			// Get client-side pagination parameters (always enabled)
+			paginationParams := getClientSidePaginationParams(request)
+
 			span.SetAttributes(
 				attribute.String("org", org),
 				attribute.String("pipeline_slug", pipelineSlug),
 				attribute.String("build_number", buildNumber),
 				attribute.String("job_state", jobStateFilter),
+				attribute.Int("page", paginationParams.Page),
+				attribute.Int("per_page", paginationParams.PerPage),
 			)
 
 			build, resp, err := client.Get(ctx, org, pipelineSlug, buildNumber, &buildkite.BuildGetOptions{})
@@ -93,16 +115,18 @@ func GetJobs(ctx context.Context, client BuildsClient) (tool mcp.Tool, handler s
 				jobs = filteredJobs
 			}
 
-			r, err := json.Marshal(jobs)
+			// Always apply client-side pagination
+			result := applyClientSidePagination(jobs, paginationParams)
+			r, err := json.Marshal(&result)
 			if err != nil {
 				return nil, fmt.Errorf("failed to marshal jobs: %w", err)
 			}
 
 			return mcp.NewToolResultText(string(r)), nil
 		}
-}
+	}
 
-func GetJobLogs(ctx context.Context, client *buildkite.Client) (tool mcp.Tool, handler server.ToolHandlerFunc) {
+	func GetJobLogs(ctx context.Context, client *buildkite.Client) (tool mcp.Tool, handler server.ToolHandlerFunc) {
 	return mcp.NewTool("get_job_logs",
 			mcp.WithDescription("Get the logs of a job in a Buildkite build"),
 			mcp.WithString("org",
