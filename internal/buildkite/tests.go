@@ -20,7 +20,7 @@ type TestsClient interface {
 
 func GetTest(ctx context.Context, client TestsClient) (tool mcp.Tool, handler server.ToolHandlerFunc) {
 	return mcp.NewTool("get_test",
-			mcp.WithDescription("Get a specific test in Buildkite Test Engine"),
+			mcp.WithDescription("Get a specific test in Buildkite Test Engine. This provides additional metadata for failed test executions"),
 			mcp.WithString("org",
 				mcp.Required(),
 				mcp.Description("The organization slug for the owner of the test suite"),
