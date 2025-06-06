@@ -63,7 +63,7 @@ func TestGetFailedExecutions(t *testing.T) {
 
 	// Test tool properties
 	assert.Equal("get_failed_executions", tool.Name)
-	assert.Equal("Get failed test executions for a specific test run in Buildkite Test Engine", tool.Description)
+	assert.Equal("Get failed test executions for a specific test run in Buildkite Test Engine. Optionally get the expanded failure details such as full error messages and stack traces.", tool.Description)
 	assert.True(*tool.Annotations.ReadOnlyHint)
 
 	// Test successful request

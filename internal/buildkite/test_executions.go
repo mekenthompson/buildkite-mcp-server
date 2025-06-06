@@ -34,7 +34,7 @@ func GetFailedTestExecutions(ctx context.Context, client TestExecutionsClient) (
 				mcp.Description("The ID of the test run"),
 			),
 			mcp.WithBoolean("include_failure_expanded",
-				mcp.Description("Include the expanded failure details such as full error messages and stack traces"),
+				mcp.Description("Include the expanded failure details such as full error messages and stack traces. This can be used to explain and diganose the cause of test failures."),
 			),
 			mcp.WithToolAnnotation(mcp.ToolAnnotation{
 				Title:        "Get Failed Test Executions",

@@ -43,7 +43,7 @@ func ListBuilds(ctx context.Context, client BuildsClient) (tool mcp.Tool, handle
 				mcp.Description("The slug of the pipeline"),
 			),
 			mcp.WithString("branch",
-				mcp.Description("Filter builds by branch name"),
+				mcp.Description("Filter builds by git branch name"),
 			),
 			withPagination(),
 			mcp.WithToolAnnotation(mcp.ToolAnnotation{
@@ -120,7 +120,7 @@ func ListBuilds(ctx context.Context, client BuildsClient) (tool mcp.Tool, handle
 
 func GetBuildTestEngineRuns(ctx context.Context, client BuildsClient) (tool mcp.Tool, handler server.ToolHandlerFunc) {
 	return mcp.NewTool("get_build_test_engine_runs",
-			mcp.WithDescription("Get test engine runs data for a specific build in Buildkite"),
+			mcp.WithDescription("Get test engine runs data for a specific build in Buildkite. This can be used to look up Test Runs."),
 			mcp.WithString("org",
 				mcp.Required(),
 				mcp.Description("The organization slug for the owner of the pipeline"),
@@ -282,5 +282,3 @@ func GetBuild(ctx context.Context, client BuildsClient) (tool mcp.Tool, handler 
 			return mcp.NewToolResultText(string(r)), nil
 		}
 }
-
-
