@@ -24,11 +24,11 @@ func TestGetJobs(t *testing.T) {
 					State:     "finished",
 					CreatedAt: &buildkite.Timestamp{},
 					Jobs: []buildkite.Job{
-						{ID: "job1", State: "passed"},
-						{ID: "job2", State: "failed"},
-						{ID: "job3", State: "running"},
+						{ID: "job1", State: "passed", Agent: buildkite.Agent{ID: "agent1", Name: "test-agent-1"}},
+						{ID: "job2", State: "failed", Agent: buildkite.Agent{ID: "agent2", Name: "test-agent-2"}},
+						{ID: "job3", State: "running", Agent: buildkite.Agent{ID: "agent3", Name: "test-agent-3"}},
 						{ID: "job4", State: "waiting"},
-						{ID: "job5", State: "passed"},
+						{ID: "job5", State: "passed", Agent: buildkite.Agent{ID: "agent5", Name: "test-agent-5"}},
 						{ID: "job6", State: "canceled"},
 					},
 				}, &buildkite.Response{
@@ -43,7 +43,7 @@ func TestGetJobs(t *testing.T) {
 	assert.NotNil(tool)
 	assert.NotNil(handler)
 
-	// Test getting all jobs (no filter)
+	// Test getting all jobs (no filter) - agent info should be excluded by default
 	requestAll := createMCPRequest(t, map[string]any{
 		"org":           "org",
 		"pipeline_slug": "pipeline",
@@ -59,6 +59,9 @@ func TestGetJobs(t *testing.T) {
 	assert.Contains(textContentAll.Text, `"job4"`)
 	assert.Contains(textContentAll.Text, `"job5"`)
 	assert.Contains(textContentAll.Text, `"job6"`)
+	// Agent ID should be included but not detailed info by default
+	assert.Contains(textContentAll.Text, `"agent1"`)
+	assert.NotContains(textContentAll.Text, `"test-agent-1"`)
 	// Should always have pagination metadata (default page size 25)
 	assert.Contains(textContentAll.Text, `"page":1`)
 	assert.Contains(textContentAll.Text, `"per_page":25`)
@@ -80,11 +83,11 @@ func TestGetJobsWithStateFilter(t *testing.T) {
 					State:     "finished",
 					CreatedAt: &buildkite.Timestamp{},
 					Jobs: []buildkite.Job{
-						{ID: "job1", State: "passed"},
-						{ID: "job2", State: "failed"},
-						{ID: "job3", State: "running"},
+						{ID: "job1", State: "passed", Agent: buildkite.Agent{ID: "agent1", Name: "test-agent-1"}},
+						{ID: "job2", State: "failed", Agent: buildkite.Agent{ID: "agent2", Name: "test-agent-2"}},
+						{ID: "job3", State: "running", Agent: buildkite.Agent{ID: "agent3", Name: "test-agent-3"}},
 						{ID: "job4", State: "waiting"},
-						{ID: "job5", State: "passed"},
+						{ID: "job5", State: "passed", Agent: buildkite.Agent{ID: "agent5", Name: "test-agent-5"}},
 						{ID: "job6", State: "canceled"},
 					},
 				}, &buildkite.Response{
@@ -341,6 +344,176 @@ func TestGetJobsPagination(t *testing.T) {
 	textContentBeyond := getTextResult(t, resultBeyond)
 	// Should contain empty items array
 	assert.Contains(textContentBeyond.Text, `"items":[]`)
+}
+
+func TestGetJobsWithAgentInfo(t *testing.T) {
+	assert := require.New(t)
+
+	ctx := context.Background()
+	client := &MockBuildsClient{
+		GetFunc: func(ctx context.Context, org string, pipeline string, id string, opt *buildkite.BuildGetOptions) (buildkite.Build, *buildkite.Response, error) {
+			// Create a build with jobs that have agent info
+			return buildkite.Build{
+					ID:        "123",
+					Number:    1,
+					State:     "finished",
+					CreatedAt: &buildkite.Timestamp{},
+					Jobs: []buildkite.Job{
+						{ID: "job1", State: "passed", Agent: buildkite.Agent{ID: "agent1", Name: "test-agent-1"}},
+						{ID: "job2", State: "running", Agent: buildkite.Agent{ID: "agent2", Name: "test-agent-2"}},
+						{ID: "job3", State: "waiting"}, // no agent
+					},
+				}, &buildkite.Response{
+					Response: &http.Response{
+						StatusCode: 200,
+					},
+				}, nil
+		},
+	}
+
+	tool, handler := GetJobs(ctx, client)
+	assert.NotNil(tool)
+	assert.NotNil(handler)
+
+	// Test with include_agent=false (default behavior)
+	requestWithoutAgent := createMCPRequest(t, map[string]any{
+		"org":           "org",
+		"pipeline_slug": "pipeline",
+		"build_number":  "1",
+		"include_agent": false,
+	})
+	resultWithoutAgent, err := handler(ctx, requestWithoutAgent)
+	assert.NoError(err)
+
+	textContentWithoutAgent := getTextResult(t, resultWithoutAgent)
+	assert.Contains(textContentWithoutAgent.Text, `"job1"`)
+	assert.Contains(textContentWithoutAgent.Text, `"job2"`)
+	assert.Contains(textContentWithoutAgent.Text, `"job3"`)
+	// Agent IDs should be included but not detailed info
+	assert.Contains(textContentWithoutAgent.Text, `"agent1"`)
+	assert.NotContains(textContentWithoutAgent.Text, `"test-agent-1"`)
+	assert.Contains(textContentWithoutAgent.Text, `"agent2"`)
+	assert.NotContains(textContentWithoutAgent.Text, `"test-agent-2"`)
+
+	// Test with include_agent=true
+	requestWithAgent := createMCPRequest(t, map[string]any{
+		"org":           "org",
+		"pipeline_slug": "pipeline",
+		"build_number":  "1",
+		"include_agent": true,
+	})
+	resultWithAgent, err := handler(ctx, requestWithAgent)
+	assert.NoError(err)
+
+	textContentWithAgent := getTextResult(t, resultWithAgent)
+	assert.Contains(textContentWithAgent.Text, `"job1"`)
+	assert.Contains(textContentWithAgent.Text, `"job2"`)
+	assert.Contains(textContentWithAgent.Text, `"job3"`)
+	// Full agent info should be included for jobs that have agents
+	assert.Contains(textContentWithAgent.Text, `"agent1"`)
+	assert.Contains(textContentWithAgent.Text, `"test-agent-1"`)
+	assert.Contains(textContentWithAgent.Text, `"agent2"`)
+	assert.Contains(textContentWithAgent.Text, `"test-agent-2"`)
+}
+
+func TestGetJobsDefaultExcludesAgent(t *testing.T) {
+	assert := require.New(t)
+
+	ctx := context.Background()
+	client := &MockBuildsClient{
+		GetFunc: func(ctx context.Context, org string, pipeline string, id string, opt *buildkite.BuildGetOptions) (buildkite.Build, *buildkite.Response, error) {
+			return buildkite.Build{
+					ID:        "123",
+					Number:    1,
+					State:     "finished",
+					CreatedAt: &buildkite.Timestamp{},
+					Jobs: []buildkite.Job{
+						{ID: "job1", State: "passed", Agent: buildkite.Agent{ID: "agent1", Name: "test-agent-1"}},
+					},
+				}, &buildkite.Response{
+					Response: &http.Response{
+						StatusCode: 200,
+					},
+				}, nil
+		},
+	}
+
+	tool, handler := GetJobs(ctx, client)
+	assert.NotNil(tool)
+	assert.NotNil(handler)
+
+	// Test default behavior (no include_agent parameter)
+	requestDefault := createMCPRequest(t, map[string]any{
+		"org":           "org",
+		"pipeline_slug": "pipeline",
+		"build_number":  "1",
+	})
+	resultDefault, err := handler(ctx, requestDefault)
+	assert.NoError(err)
+
+	textContentDefault := getTextResult(t, resultDefault)
+	assert.Contains(textContentDefault.Text, `"job1"`)
+	// Agent ID should be included but not detailed info by default
+	assert.Contains(textContentDefault.Text, `"agent1"`)
+	assert.NotContains(textContentDefault.Text, `"test-agent-1"`)
+}
+
+func TestGetJobsPaginationWithFilter(t *testing.T) {
+	assert := require.New(t)
+
+	ctx := context.Background()
+	client := &MockBuildsClient{
+		GetFunc: func(ctx context.Context, org string, pipeline string, id string, opt *buildkite.BuildGetOptions) (buildkite.Build, *buildkite.Response, error) {
+			// Create a build with multiple jobs of the same state for filtering
+			return buildkite.Build{
+					ID:        "123",
+					Number:    1,
+					State:     "finished",
+					CreatedAt: &buildkite.Timestamp{},
+					Jobs: []buildkite.Job{
+						{ID: "job1", State: "passed", Agent: buildkite.Agent{ID: "agent1", Name: "test-agent-1"}},
+						{ID: "job2", State: "failed", Agent: buildkite.Agent{ID: "agent2", Name: "test-agent-2"}},
+						{ID: "job3", State: "passed", Agent: buildkite.Agent{ID: "agent3", Name: "test-agent-3"}},
+						{ID: "job4", State: "passed", Agent: buildkite.Agent{ID: "agent4", Name: "test-agent-4"}},
+						{ID: "job5", State: "passed", Agent: buildkite.Agent{ID: "agent5", Name: "test-agent-5"}},
+						{ID: "job6", State: "failed", Agent: buildkite.Agent{ID: "agent6", Name: "test-agent-6"}},
+					},
+				}, &buildkite.Response{
+					Response: &http.Response{
+						StatusCode: 200,
+					},
+				}, nil
+		},
+	}
+
+	tool, handler := GetJobs(ctx, client)
+	assert.NotNil(tool)
+	assert.NotNil(handler)
+
+	// Test pagination with state filter - should have 4 "passed" jobs total
+	requestPassedPaginated := createMCPRequest(t, map[string]any{
+		"org":           "org",
+		"pipeline_slug": "pipeline",
+		"build_number":  "1",
+		"job_state":     "passed",
+		"page":          float64(1),
+		"perPage":       float64(2),
+	})
+	resultPassedPaginated, err := handler(ctx, requestPassedPaginated)
+	assert.NoError(err)
+
+	textContentPassedPaginated := getTextResult(t, resultPassedPaginated)
+	// Should contain first 2 "passed" jobs
+	assert.Contains(textContentPassedPaginated.Text, `"job1"`)
+	assert.Contains(textContentPassedPaginated.Text, `"job3"`)
+	assert.NotContains(textContentPassedPaginated.Text, `"job2"`) // failed job
+	assert.NotContains(textContentPassedPaginated.Text, `"job4"`) // not on this page
+	// Should have pagination metadata
+	assert.Contains(textContentPassedPaginated.Text, `"page":1`)
+	assert.Contains(textContentPassedPaginated.Text, `"per_page":2`)
+	assert.Contains(textContentPassedPaginated.Text, `"total":4`)
+	assert.Contains(textContentPassedPaginated.Text, `"has_next":true`)
+	assert.Contains(textContentPassedPaginated.Text, `"has_prev":false`)
 }
 
 func TestGetJobLogs(t *testing.T) {

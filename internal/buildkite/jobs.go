@@ -50,6 +50,9 @@ func GetJobs(ctx context.Context, client BuildsClient) (tool mcp.Tool, handler s
 			mcp.WithString("job_state",
 				mcp.Description("Filter jobs by state. Supports actual states (scheduled, running, passed, failed, canceled, skipped, etc.)"),
 			),
+			mcp.WithBoolean("include_agent",
+				mcp.Description("Include detailed agent information in the response. When false (default), only agent ID is included to reduce response size."),
+			),
 			withJobsPagination(),
 			mcp.WithToolAnnotation(mcp.ToolAnnotation{
 				Title:        "Get Jobs",
@@ -76,6 +79,7 @@ func GetJobs(ctx context.Context, client BuildsClient) (tool mcp.Tool, handler s
 			}
 
 			jobStateFilter := request.GetString("job_state", "")
+			includeAgent := request.GetBool("include_agent", false)
 
 			// Get client-side pagination parameters (always enabled)
 			paginationParams := getClientSidePaginationParams(request)
@@ -85,6 +89,7 @@ func GetJobs(ctx context.Context, client BuildsClient) (tool mcp.Tool, handler s
 				attribute.String("pipeline_slug", pipelineSlug),
 				attribute.String("build_number", buildNumber),
 				attribute.String("job_state", jobStateFilter),
+				attribute.Bool("include_agent", includeAgent),
 				attribute.Int("page", paginationParams.Page),
 				attribute.Int("per_page", paginationParams.PerPage),
 			)
@@ -113,6 +118,18 @@ func GetJobs(ctx context.Context, client BuildsClient) (tool mcp.Tool, handler s
 					}
 				}
 				jobs = filteredJobs
+			}
+
+			// Remove agent details if not requested to reduce response size, but keep agent ID
+			if !includeAgent {
+				jobsWithoutAgent := make([]buildkite.Job, len(jobs))
+				for i, job := range jobs {
+					jobCopy := job
+					// Keep only the agent ID, remove all other verbose agent details
+					jobCopy.Agent = buildkite.Agent{ID: job.Agent.ID}
+					jobsWithoutAgent[i] = jobCopy
+				}
+				jobs = jobsWithoutAgent
 			}
 
 			// Always apply client-side pagination
