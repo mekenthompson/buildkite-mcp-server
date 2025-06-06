@@ -59,19 +59,35 @@ func BuildkiteTools(ctx context.Context, client *gobuildkite.Client) []server.Se
 	// Build tools
 	tools = addTool(buildkite.ListBuilds(ctx, client.Builds))
 	tools = addTool(buildkite.GetBuild(ctx, client.Builds))
+	tools = addTool(buildkite.GetBuildTestEngineRuns(ctx, client.Builds))
 
 	// User tools
 	tools = addTool(buildkite.CurrentUser(ctx, client.User))
 	tools = addTool(buildkite.UserTokenOrganization(ctx, client.Organizations))
 
-	// Other tools
+	// Job tools
+	tools = addTool(buildkite.GetJobs(ctx, client.Builds))
 	tools = addTool(buildkite.GetJobLogs(ctx, client))
-	tools = addTool(buildkite.AccessToken(ctx, client.AccessTokens))
+
+	// Artifacts tools
 	tools = addTool(buildkite.ListArtifacts(ctx, clientAdapter))
 	tools = addTool(buildkite.GetArtifact(ctx, clientAdapter))
 
 	// Annotation tools
 	tools = addTool(buildkite.ListAnnotations(ctx, client.Annotations))
+
+	// Test Run tools
+	tools = addTool(buildkite.ListTestRuns(ctx, client.TestRuns))
+	tools = addTool(buildkite.GetTestRun(ctx, client.TestRuns))
+
+	// Test Execution tools
+	tools = addTool(buildkite.GetFailedTestExecutions(ctx, client.TestRuns))
+
+	// Test tools
+	tools = addTool(buildkite.GetTest(ctx, client.Tests))
+
+	// Other tools
+	tools = addTool(buildkite.AccessToken(ctx, client.AccessTokens))
 
 	return tools
 }
