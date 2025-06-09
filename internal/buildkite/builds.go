@@ -272,7 +272,7 @@ func GetBuild(ctx context.Context, client BuildsClient) (tool mcp.Tool, handler 
 				Build:      build,
 				JobSummary: jobSummary,
 			}
-			buildWithSummary.Build.Jobs = nil
+			buildWithSummary.Jobs = nil
 
 			r, err := json.Marshal(&buildWithSummary)
 			if err != nil {
