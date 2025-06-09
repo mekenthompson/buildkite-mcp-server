@@ -2,8 +2,8 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"os"
+	"strings"
 
 	"github.com/alecthomas/kong"
 	"github.com/buildkite/buildkite-mcp-server/internal/commands"
@@ -25,6 +25,22 @@ var (
 		Version     kong.VersionFlag
 	}
 )
+
+func parseHeaders(headerStrings []string, logger zerolog.Logger) map[string]string {
+	headers := make(map[string]string)
+	for _, h := range headerStrings {
+		parts := strings.SplitN(h, ":", 2)
+		if len(parts) == 2 {
+			key := strings.TrimSpace(parts[0])
+			value := strings.TrimSpace(parts[1])
+			headers[key] = value
+			logger.Debug().Str("key", key).Str("value", value).Msg("parsed header")
+		} else {
+			logger.Warn().Str("header", h).Msg("invalid header format, expected 'Key: Value'")
+		}
+	}
+	return headers
+}
 
 func main() {
 	ctx := context.Background()
@@ -54,15 +70,7 @@ func main() {
 	}()
 
 	// Parse additional headers into a map
-	headers := make(map[string]string)
-	for _, h := range cli.HTTPHeaders {
-		var key, value string
-		if n, _ := fmt.Sscanf(h, "%s: %s", &key, &value); n == 2 {
-			headers[key] = value
-		} else {
-			logger.Warn().Str("header", h).Msg("invalid header format, expected 'Key: Value'")
-		}
-	}
+	headers := parseHeaders(cli.HTTPHeaders, logger)
 
 	client, err := buildkite.NewOpts(
 		buildkite.WithTokenAuth(cli.APIToken),
