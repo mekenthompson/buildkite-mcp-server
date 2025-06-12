@@ -161,6 +161,23 @@ extensions:
 }
 ```
 
+## Zed
+
+There is a [Zed](https://zed.dev) editor [extension](https://github.com/mcncl/zed-mcp-server-buildkite) available in the [official extension gallery](https://zed.dev/extensions?query=buildkite). During installation it will ask for an API token which will be added to your settings. Or you can manually configure:
+
+```jsonc
+// ~/.config/zed/settings.json
+{
+  "context_servers": {
+    "mcp-server-buildkite": {
+      "settings": {
+        "buildkite_api_token": "your-buildkite-token-here",
+      }
+    }
+  }
+}
+```
+
 # Security
 
 This container image is built using [cgr.dev/chainguard/static](https://images.chainguard.dev/directory/image/static/versions) base image and is configured to run the MCP server as a non-root user.
