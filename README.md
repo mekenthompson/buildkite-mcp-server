@@ -51,7 +51,7 @@ goreleaser build --snapshot --clean
 
 # configuration
 
-Create a buildkite api token with read access to pipelines.
+Create a [Buildkite API Access Token with read access to pipelines].
 
 ## Claude Desktop Configuration
 
@@ -176,3 +176,6 @@ This project is in the early stages of development and is not yet ready for use.
 ## License
 
 This project is released under MIT license.
+
+
+[Buildkite API Access Token with read access to pipelines]: https://buildkite.com/user/api-access-tokens/new?scopes[]=read_pipelines
