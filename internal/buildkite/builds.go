@@ -33,7 +33,7 @@ type BuildWithSummary struct {
 
 func ListBuilds(ctx context.Context, client BuildsClient) (tool mcp.Tool, handler server.ToolHandlerFunc) {
 	return mcp.NewTool("list_builds",
-			mcp.WithDescription("List all builds in a pipeline in Buildkite"),
+			mcp.WithDescription("List all builds for a pipeline with their status, commit information, and metadata"),
 			mcp.WithString("org",
 				mcp.Required(),
 				mcp.Description("The organization slug for the owner of the pipeline"),
@@ -195,7 +195,7 @@ func GetBuildTestEngineRuns(ctx context.Context, client BuildsClient) (tool mcp.
 
 func GetBuild(ctx context.Context, client BuildsClient) (tool mcp.Tool, handler server.ToolHandlerFunc) {
 	return mcp.NewTool("get_build",
-			mcp.WithDescription("Get a build in Buildkite. Includes job summary with counts by state."),
+			mcp.WithDescription("Get detailed information about a specific build including its jobs, timing, and execution details"),
 			mcp.WithString("org",
 				mcp.Required(),
 				mcp.Description("The organization slug for the owner of the pipeline"),

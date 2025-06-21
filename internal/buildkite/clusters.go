@@ -19,7 +19,7 @@ type ClustersClient interface {
 
 func ListClusters(ctx context.Context, client ClustersClient) (tool mcp.Tool, handler server.ToolHandlerFunc) {
 	return mcp.NewTool("list_clusters",
-			mcp.WithDescription("List all buildkite clusters in an organization"),
+			mcp.WithDescription("List all clusters in an organization with their names, descriptions, default queues, and creation details"),
 			mcp.WithString("org",
 				mcp.Required(),
 				mcp.Description("The organization slug for the owner of the pipeline"),
@@ -80,7 +80,7 @@ func ListClusters(ctx context.Context, client ClustersClient) (tool mcp.Tool, ha
 
 func GetCluster(ctx context.Context, client ClustersClient) (tool mcp.Tool, handler server.ToolHandlerFunc) {
 	return mcp.NewTool("get_cluster",
-			mcp.WithDescription("Get details of a buildkite cluster in an organization"),
+			mcp.WithDescription("Get detailed information about a specific cluster including its name, description, default queue, and configuration"),
 			mcp.WithString("org",
 				mcp.Required(),
 				mcp.Description("The organization slug for the owner of the pipeline"),

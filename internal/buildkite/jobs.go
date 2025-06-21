@@ -34,7 +34,7 @@ func withJobsPagination() mcp.ToolOption {
 
 func GetJobs(ctx context.Context, client BuildsClient) (tool mcp.Tool, handler server.ToolHandlerFunc) {
 	return mcp.NewTool("get_jobs",
-			mcp.WithDescription("Get jobs for a specific build in Buildkite. Optionally filter by job state."),
+			mcp.WithDescription("Get all jobs for a specific build including their state, timing, commands, and execution details"),
 			mcp.WithString("org",
 				mcp.Required(),
 				mcp.Description("The organization slug for the owner of the pipeline"),
@@ -141,11 +141,11 @@ func GetJobs(ctx context.Context, client BuildsClient) (tool mcp.Tool, handler s
 
 			return mcp.NewToolResultText(string(r)), nil
 		}
-	}
+}
 
-	func GetJobLogs(ctx context.Context, client *buildkite.Client) (tool mcp.Tool, handler server.ToolHandlerFunc) {
+func GetJobLogs(ctx context.Context, client *buildkite.Client) (tool mcp.Tool, handler server.ToolHandlerFunc) {
 	return mcp.NewTool("get_job_logs",
-			mcp.WithDescription("Get the logs of a job in a Buildkite build"),
+			mcp.WithDescription("Get the log output and metadata for a specific job, including content, size, and header timestamps"),
 			mcp.WithString("org",
 				mcp.Required(),
 				mcp.Description("The organization slug for the owner of the pipeline"),

@@ -8,26 +8,27 @@ This is an [Model Context Protocol (MCP)](https://modelcontextprotocol.io/introd
 
 # Tools
 
-* `get_cluster` - Get details of a buildkite cluster in an organization
-* `list_clusters` - List all buildkite clusters in an organization
-* `get_cluster_queue` - Get details of a buildkite cluster queue in an organization
-* `list_cluster_queues` - List all buildkite queues in a cluster
-* `get_pipeline` - Get details of a specific pipeline in Buildkite
-* `list_pipelines` - List all pipelines in a buildkite organization
-* `list_builds` - List all builds in a pipeline in Buildkite
-* `get_build` - Get a build in Buildkite
-* `current_user` - Get the current user
+* `get_cluster` - Get detailed information about a specific cluster including its name, description, default queue, and configuration
+* `list_clusters` - List all clusters in an organization with their names, descriptions, default queues, and creation details
+* `get_cluster_queue` - Get detailed information about a specific queue including its key, description, dispatch status, and hosted agent configuration
+* `list_cluster_queues` - List all queues in a cluster with their keys, descriptions, dispatch status, and agent configuration
+* `get_pipeline` - Get detailed information about a specific pipeline including its configuration, steps, environment variables, and build statistics
+* `list_pipelines` - List all pipelines in an organization with their basic details, build counts, and current status
+* `list_builds` - List all builds for a pipeline with their status, commit information, and metadata
+* `get_build` - Get detailed information about a specific build including its jobs, timing, and execution details
+* `get_build_test_engine_runs` - Get test engine runs data for a specific build in Buildkite. This can be used to look up Test Runs.
+* `current_user` - Get details about the user account that owns the API token, including name, email, avatar, and account creation date
 * `user_token_organization` - Get the organization associated with the user token used for this request
-* `get_jobs` - Get a list of jobs for a build
-* `get_job_logs` - Get the logs of a job in a Buildkite build
-* `access_token` - Get the details for the API access token that was used to authenticate the request
-* `list_artifacts` - List the artifacts for a Buildkite build
-* `get_artifact` - Get an artifact from a Buildkite build
-* `list_annotations` - List the annotations for a Buildkite build
-* `list_test_runs` - List all test runs for a test suite in Test Engine
-* `get_test_run` - Get a specific test run in Test Engine
-* `get_failed_test_executions` - Get a list of the failed test executions for a run in Test Engine
-* `get_test` - Get a test in Test Engine
+* `get_jobs` - Get all jobs for a specific build including their state, timing, commands, and execution details
+* `get_job_logs` - Get the log output and metadata for a specific job, including content, size, and header timestamps
+* `list_artifacts` - List all artifacts for a build across all jobs, including file details, paths, sizes, MIME types, and download URLs
+* `get_artifact` - Get detailed information about a specific artifact including its metadata, file size, SHA-1 hash, and download URL
+* `list_annotations` - List all annotations for a build, including their context, style (success/info/warning/error), rendered HTML content, and creation timestamps
+* `list_test_runs` - List all test runs for a test suite in Buildkite Test Engine
+* `get_test_run` - Get a specific test run in Buildkite Test Engine
+* `get_failed_executions` - Get failed test executions for a specific test run in Buildkite Test Engine. Optionally get the expanded failure details such as full error messages and stack traces.
+* `get_test` - Get a specific test in Buildkite Test Engine. This provides additional metadata for failed test executions
+* `access_token` - Get information about the current API access token including its scopes and UUID
 
 Example of the `get_pipeline` tool in action.
 
