@@ -38,7 +38,7 @@ func (a *BuildkiteClientAdapter) DownloadArtifactByURL(ctx context.Context, url 
 
 func ListArtifacts(ctx context.Context, client ArtifactsClient) (tool mcp.Tool, handler server.ToolHandlerFunc) {
 	return mcp.NewTool("list_artifacts",
-			mcp.WithDescription("List the artifacts for a Buildkite build"),
+			mcp.WithDescription("List all artifacts for a build across all jobs, including file details, paths, sizes, MIME types, and download URLs"),
 			mcp.WithString("org",
 				mcp.Required(),
 				mcp.Description("The organization slug for the owner of the pipeline"),
@@ -124,7 +124,7 @@ func ListArtifacts(ctx context.Context, client ArtifactsClient) (tool mcp.Tool, 
 
 func GetArtifact(ctx context.Context, client ArtifactsClient) (tool mcp.Tool, handler server.ToolHandlerFunc) {
 	return mcp.NewTool("get_artifact",
-			mcp.WithDescription("Get an artifact from a Buildkite build"),
+			mcp.WithDescription("Get detailed information about a specific artifact including its metadata, file size, SHA-1 hash, and download URL"),
 			mcp.WithString("url",
 				mcp.Required(),
 				mcp.Description("The URL of the artifact to get"),
@@ -161,7 +161,7 @@ func GetArtifact(ctx context.Context, client ArtifactsClient) (tool mcp.Tool, ha
 			}
 
 			// Create a response with the artifact data encoded safely for JSON
-			result := map[string]interface{}{
+			result := map[string]any{
 				"status":     resp.Status,
 				"statusCode": resp.StatusCode,
 				"data":       base64.StdEncoding.EncodeToString(buffer.Bytes()),

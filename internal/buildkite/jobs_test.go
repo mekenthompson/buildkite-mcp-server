@@ -496,7 +496,7 @@ func TestGetJobLogs(t *testing.T) {
 		tool, _ := GetJobLogs(context.Background(), nil)
 
 		assert.Equal(t, "get_job_logs", tool.Name)
-		assert.Contains(t, tool.Description, "Get the logs of a job")
+		assert.Contains(t, tool.Description, "Get the log output and metadata for a specific job, including content, size, and header timestamps")
 	})
 
 	t.Run("MissingParameters", func(t *testing.T) {

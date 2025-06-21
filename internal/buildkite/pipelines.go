@@ -21,7 +21,7 @@ type PipelinesClient interface {
 
 func ListPipelines(ctx context.Context, client PipelinesClient) (tool mcp.Tool, handler server.ToolHandlerFunc) {
 	return mcp.NewTool("list_pipelines",
-			mcp.WithDescription("List all pipelines in a buildkite organization"),
+			mcp.WithDescription("List all pipelines in an organization with their basic details, build counts, and current status"),
 			mcp.WithString("org",
 				mcp.Required(),
 				mcp.Description("The organization slug for the owner of the pipeline"),
@@ -84,7 +84,7 @@ func ListPipelines(ctx context.Context, client PipelinesClient) (tool mcp.Tool, 
 
 func GetPipeline(ctx context.Context, client PipelinesClient) (tool mcp.Tool, handler server.ToolHandlerFunc) {
 	return mcp.NewTool("get_pipeline",
-			mcp.WithDescription("Get details of a specific pipeline in Buildkite"),
+			mcp.WithDescription("Get detailed information about a specific pipeline including its configuration, steps, environment variables, and build statistics"),
 			mcp.WithString("org",
 				mcp.Required(),
 				mcp.Description("The organization slug for the owner of the pipeline"),
