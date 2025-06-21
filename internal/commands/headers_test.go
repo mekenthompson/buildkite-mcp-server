@@ -1,14 +1,15 @@
-package main
+package commands
 
 import (
 	"testing"
+
 	"github.com/rs/zerolog"
 )
 
 func TestParseHeaders(t *testing.T) {
 	tests := []struct {
-		input    []string
-		want     map[string]string
+		input []string
+		want  map[string]string
 	}{
 		{[]string{"Authorization: Bearer token"}, map[string]string{"Authorization": "Bearer token"}},
 		{[]string{"Authorization: Bearer to.ke.n"}, map[string]string{"Authorization": "Bearer to.ke.n"}},
@@ -24,7 +25,7 @@ func TestParseHeaders(t *testing.T) {
 	logger := zerolog.Nop()
 
 	for _, tt := range tests {
-		got := parseHeaders(tt.input, logger)
+		got := ParseHeaders(tt.input, logger)
 		if len(got) != len(tt.want) {
 			t.Errorf("parseHeaders(%v) = %v, want %v", tt.input, got, tt.want)
 			continue
