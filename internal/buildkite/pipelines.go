@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 
 	"github.com/buildkite/buildkite-mcp-server/internal/trace"
 	"github.com/buildkite/go-buildkite/v4"
@@ -140,12 +141,22 @@ func GetPipeline(ctx context.Context, client PipelinesClient) (tool mcp.Tool, ha
 		}
 }
 
-func CreatePipeline(ctx context.Context, client PipelinesClient) (tool mcp.Tool, handler server.ToolHandlerFunc) {
+type CreatePipelineArgs struct {
+	OrgSlug         string   `json:"org_slug"`
+	Name            string   `json:"name"`
+	RepositoryURL   string   `json:"repository_url"`
+	ClusterID       string   `json:"cluster_id,omitempty"` // Optional, if not provided, the default cluster will be used
+	Description     string   `json:"description,omitempty"`
+	Configuration   string   `json:"configuration,omitempty"`
+	EnvironmentVars []string `json:"environment_variables,omitempty"`
+}
+
+func CreatePipeline(ctx context.Context, client PipelinesClient) (tool mcp.Tool, handler mcp.TypedToolHandlerFunc[CreatePipelineArgs]) {
 	return mcp.NewTool("create_pipeline",
 			mcp.WithDescription("Create a new pipeline in Buildkite using the provided repository URL. The repository URL must be a valid Git repository URL that is accessible to Buildkite."),
-			mcp.WithString("org",
+			mcp.WithString("org_slug",
 				mcp.Required(),
-				mcp.Description("The organization slug for the owner of the pipeline"),
+				mcp.Description("The organization slug for the owner of the pipeline. This is used to determine where to create the pipeline."),
 			),
 			mcp.WithString("name",
 				mcp.Required(),
@@ -158,47 +169,59 @@ func CreatePipeline(ctx context.Context, client PipelinesClient) (tool mcp.Tool,
 			mcp.WithString("description",
 				mcp.Description("The description of the pipeline"),
 			),
+			mcp.WithString("configuration",
+				mcp.Description("The pipeline configuration in YAML format. If not provided, the default configuration will be used."),
+			),
+			mcp.WithObject("environment_variables",
+				mcp.Description("A list of environment variables to set for the pipeline builds. Each variable should be a key-value pair in the format 'KEY=VALUE'."),
+				mcp.Items(map[string]any{"type": "string"}),
+			),
 			mcp.WithToolAnnotation(mcp.ToolAnnotation{
 				Title:        "Create Pipeline",
 				ReadOnlyHint: mcp.ToBoolPtr(false),
 			}),
 		),
-		func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+		func(ctx context.Context, request mcp.CallToolRequest, args CreatePipelineArgs) (*mcp.CallToolResult, error) {
 			ctx, span := trace.Start(ctx, "buildkite.CreatePipeline")
 			defer span.End()
 
-			org, err := request.RequireString("org")
-			if err != nil {
-				return mcp.NewToolResultError(err.Error()), nil
+			if args.OrgSlug == "" {
+				return mcp.NewToolResultError("org_slug is required"), nil
+			}
+			if args.Name == "" {
+				return mcp.NewToolResultError("name is required"), nil
+			}
+			if args.RepositoryURL == "" {
+				return mcp.NewToolResultError("repository_url is required"), nil
 			}
 
-			name, err := request.RequireString("name")
-			if err != nil {
-				return mcp.NewToolResultError(err.Error()), nil
-			}
-
-			repositoryURL, err := request.RequireString("repository_url")
-			if err != nil {
-				return mcp.NewToolResultError(err.Error()), nil
+			// parse the URL to ensure it's valid
+			if _, err := url.Parse(args.RepositoryURL); err != nil {
+				return mcp.NewToolResultError(fmt.Sprintf("invalid repository URL: %s", err.Error())), nil
 			}
 
 			span.SetAttributes(
-				attribute.String("org", org),
-				attribute.String("name", name),
-				attribute.String("repository_url", repositoryURL),
+				attribute.String("name", args.Name),
+				attribute.String("repository_url", args.RepositoryURL),
 			)
 
 			create := buildkite.CreatePipeline{
-				Name:       name,
-				Repository: repositoryURL,
+				Name:       args.Name,
+				Repository: args.RepositoryURL,
+			}
+
+			if args.Configuration != "" {
+				create.Configuration = args.Configuration
 			}
 
 			// if the description is not empty, set it
-			if description := request.GetString("description", ""); description != "" {
-				create.Description = description
+			if args.Description != "" {
+				create.Description = args.Description
 			}
 
-			pipeline, resp, err := client.Create(ctx, org, create)
+			args.EnvironmentVars = args.EnvironmentVars[:0] // Ensure we start with an empty slice
+
+			pipeline, resp, err := client.Create(ctx, args.OrgSlug, create)
 			if err != nil {
 				return mcp.NewToolResultError(err.Error()), nil
 			}
