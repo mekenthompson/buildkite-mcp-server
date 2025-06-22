@@ -112,11 +112,24 @@ func TestGetPipeline(t *testing.T) {
 func TestCreatePipeline(t *testing.T) {
 	assert := require.New(t)
 
+	testPipelineDefinition := `
+agents:
+  queue: "something"
+env:
+  TEST_ENV_VAR: "value"
+steps: 
+  - command: "echo Hello World"
+    key: "hello_step"
+    label: "Hello Step"
+`
+
 	ctx := context.Background()
 	client := &MockPipelinesClient{
 		CreateFunc: func(ctx context.Context, org string, p buildkite.CreatePipeline) (buildkite.Pipeline, *buildkite.Response, error) {
-			return buildkite.Pipeline{
 
+			assert.Equal(testPipelineDefinition, p.Configuration)
+
+			return buildkite.Pipeline{
 					ID:        "123",
 					Slug:      "test-pipeline",
 					Name:      "Test Pipeline",
@@ -138,8 +151,18 @@ func TestCreatePipeline(t *testing.T) {
 		"name":           "Test Pipeline",
 		"repository_url": "https://example.com/repo.git",
 	})
-	result, err := handler(ctx, request)
+
+	args := CreatePipelineArgs{
+		OrgSlug:         "org",
+		Name:            "Test Pipeline",
+		RepositoryURL:   "https://example.com/repo.git",
+		Description:     "A test pipeline",
+		Configuration:   testPipelineDefinition,
+		EnvironmentVars: []string{"KEY=VALUE"},
+	}
+
+	result, err := handler(ctx, request, args)
 	assert.NoError(err)
 	textContent := getTextResult(t, result)
-	assert.Equal(`{"id":"123","name":"Test Pipeline","slug":"test-pipeline","created_at":"0001-01-01T00:00:00Z","provider":{"id":"","webhook_url":"","settings":null}}`, textContent.Text)
+	assert.Equal(`{"id":"123","name":"Test Pipeline","slug":"test-pipeline","created_at":"0001-01-01T00:00:00Z","skip_queued_branch_builds":false,"cancel_running_branch_builds":false,"provider":{"id":"","webhook_url":"","settings":null}}`, textContent.Text)
 }

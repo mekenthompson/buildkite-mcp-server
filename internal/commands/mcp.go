@@ -11,6 +11,10 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+func fromTypeTool[T any](tool mcp.Tool, handler mcp.TypedToolHandlerFunc[T]) (mcp.Tool, server.ToolHandlerFunc) {
+	return tool, mcp.NewTypedToolHandler(handler)
+}
+
 func NewMCPServer(ctx context.Context, globals *Globals) *server.MCPServer {
 	s := server.NewMCPServer(
 		"buildkite-mcp-server",
@@ -55,6 +59,9 @@ func BuildkiteTools(ctx context.Context, client *gobuildkite.Client) []server.Se
 	// Pipeline tools
 	tools = addTool(buildkite.GetPipeline(ctx, client.Pipelines))
 	tools = addTool(buildkite.ListPipelines(ctx, client.Pipelines))
+	tools = addTool(
+		fromTypeTool(buildkite.CreatePipeline(ctx, client.Pipelines)),
+	)
 
 	// Build tools
 	tools = addTool(buildkite.ListBuilds(ctx, client.Builds))
