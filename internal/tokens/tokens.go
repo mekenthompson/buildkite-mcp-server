@@ -1,6 +1,8 @@
 package tokens
 
-import "strings"
+import (
+	"strings"
+)
 
 // EstimateTokens returns an estimate of the number of tokens in the given text.
 func EstimateTokens(text string) int {
@@ -10,11 +12,13 @@ func EstimateTokens(text string) int {
 	for _, word := range words {
 		// Simple heuristic: longer words typically split into more tokens
 		wordLen := len([]rune(word))
-		if wordLen <= 4 {
+		switch {
+		case wordLen <= 4:
 			tokenCount += 1
-		} else if wordLen <= 8 {
+		case wordLen <= 8:
 			tokenCount += 2
-		} else {
+		default:
+			// For longer words, assume 1 token per 4 characters, rounded up
 			tokenCount += (wordLen + 3) / 4
 		}
 	}

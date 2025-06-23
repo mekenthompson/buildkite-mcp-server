@@ -66,7 +66,7 @@ func updateReadme(toolsDocs string) {
 	newContent := re.ReplaceAllString(contentStr, toolsDocs+toolsSectionEnd)
 
 	// Write the updated README
-	err = os.WriteFile(readmePath, []byte(newContent), 0644)
+	err = os.WriteFile(readmePath, []byte(newContent), 0600)
 	if err != nil {
 		log.Fatalf("Error writing README: %v", err)
 	}

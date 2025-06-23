@@ -68,7 +68,7 @@ For full functionality with all available tools, your API token needs these scop
 - **read_artifacts** - Access build artifacts and metadata
 - **read_suites** - Access Test Engine data (if using Test Engine)
 
-Create a buildkite API token with the required scopes at: [https://buildkite.com/user/api-access-tokens/new](https://buildkite.com/user/api-access-tokens/new?scopes[]=read_clusters&scopes[]=read_pipelines&scopes[]=read_builds&scopes[]=read_build_logs&scopes[]=read_user&scopes[]=read_organizations&scopes[]=read_artifacts&scopes[]=read_suites)
+Create a buildkite API token with [Full functionality](https://buildkite.com/user/api-access-tokens/new?scopes[]=read_clusters&scopes[]=read_pipelines&scopes[]=read_builds&scopes[]=read_build_logs&scopes[]=read_user&scopes[]=read_organizations&scopes[]=read_artifacts&scopes[]=read_suites)
 
 ### Minimum Recommended Scopes
 
