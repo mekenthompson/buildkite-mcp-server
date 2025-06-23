@@ -242,10 +242,6 @@ This container image is built using [cgr.dev/chainguard/static](https://images.c
 
 Notes on building this project are in the [DEVELOPMENT.md](DEVELOPMENT.md)
 
-## Disclaimer
-
-This project is in the early stages of development and is not yet ready for use.
-
 ## License
 
 This project is released under MIT license.
