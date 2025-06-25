@@ -263,7 +263,7 @@ There is a [Zed](https://zed.dev) editor [extension](https://github.com/mcncl/ze
   "context_servers": {
     "mcp-server-buildkite": {
       "settings": {
-        "buildkite_api_token": "your-buildkite-token-here",
+        "buildkite_api_token": "your-buildkite-token-here"
       }
     }
   }
