@@ -211,6 +211,46 @@ extensions:
 
 <details>
 
+<summary>Windsurf</summary>
+
+## Windsurf
+
+Configuration using Docker:
+
+```jsonc
+{
+  "mcpServers": {
+    "buildkite": {
+      "command": "docker",
+      "args": [
+        "run", "-i", "--rm", "-e", "BUILDKITE_API_TOKEN",
+        "ghcr.io/buildkite/buildkite-mcp-server",
+        "stdio"
+      ],
+      "env": { "BUILDKITE_API_TOKEN": "bkua_xxxxxxxx" }
+    }
+  }
+}
+```
+
+Local binary:
+
+```jsonc
+{
+  "mcpServers": {
+    "buildkite": {
+      "command": "buildkite-mcp-server",
+      "args": ["stdio"],
+      "env": { "BUILDKITE_API_TOKEN": "bkua_xxxxxxxx" }
+    }
+  }
+}
+```
+
+</details>
+
+<details>
+
 <summary>Zed</summary>
 
 ## Zed
