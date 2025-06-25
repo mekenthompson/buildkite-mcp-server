@@ -249,7 +249,7 @@ extensions:
 
 ![Get Pipeline Tool](docs/images/get_pipeline.png)
 
-_Add additional screenshots or GIFs to showcase other features._
+
 
 ---
 
