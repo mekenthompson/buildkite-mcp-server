@@ -143,6 +143,7 @@ steps:
 					Name:      "Test Pipeline",
 					ClusterID: "abc-123",
 					CreatedAt: &buildkite.Timestamp{},
+					Tags:      []string{"tag1", "tag2"},
 				}, &buildkite.Response{
 					Response: &http.Response{
 						StatusCode: 200,
@@ -168,12 +169,13 @@ steps:
 		RepositoryURL: "https://example.com/repo.git",
 		Description:   "A test pipeline",
 		Configuration: testPipelineDefinition,
+		Tags:          []string{"tag1", "tag2"},
 	}
 
 	result, err := handler(ctx, request, args)
 	assert.NoError(err)
 	textContent := getTextResult(t, result)
-	assert.Equal(`{"id":"123","name":"Test Pipeline","slug":"test-pipeline","created_at":"0001-01-01T00:00:00Z","skip_queued_branch_builds":false,"cancel_running_branch_builds":false,"cluster_id":"abc-123","provider":{"id":"","webhook_url":"","settings":null}}`, textContent.Text)
+	assert.Equal(`{"id":"123","name":"Test Pipeline","slug":"test-pipeline","created_at":"0001-01-01T00:00:00Z","skip_queued_branch_builds":false,"cancel_running_branch_builds":false,"cluster_id":"abc-123","tags":["tag1","tag2"],"provider":{"id":"","webhook_url":"","settings":null}}`, textContent.Text)
 }
 
 func TestUpdatePipeline(t *testing.T) {
@@ -200,6 +202,7 @@ steps:
 					Name:      "Test Pipeline",
 					ClusterID: "abc-123",
 					CreatedAt: &buildkite.Timestamp{},
+					Tags:      []string{"tag1", "tag2"},
 				}, &buildkite.Response{
 					Response: &http.Response{
 						StatusCode: 200,
@@ -223,9 +226,10 @@ steps:
 		Description:   "A test pipeline",
 		Configuration: testPipelineDefinition,
 		RepositoryURL: "https://example.com/repo.git",
+		Tags:          []string{"tag1", "tag2"},
 	}
 	result, err := handler(ctx, request, args)
 	assert.NoError(err)
 	textContent := getTextResult(t, result)
-	assert.Equal(`{"id":"123","name":"Test Pipeline","slug":"test-pipeline","created_at":"0001-01-01T00:00:00Z","skip_queued_branch_builds":false,"cancel_running_branch_builds":false,"cluster_id":"abc-123","provider":{"id":"","webhook_url":"","settings":null}}`, textContent.Text)
+	assert.Equal(`{"id":"123","name":"Test Pipeline","slug":"test-pipeline","created_at":"0001-01-01T00:00:00Z","skip_queued_branch_builds":false,"cancel_running_branch_builds":false,"cluster_id":"abc-123","tags":["tag1","tag2"],"provider":{"id":"","webhook_url":"","settings":null}}`, textContent.Text)
 }

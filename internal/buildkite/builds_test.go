@@ -399,6 +399,12 @@ func TestCreateBuild(t *testing.T) {
 					Number:    1,
 					State:     "created",
 					CreatedAt: &buildkite.Timestamp{},
+					Env: map[string]any{
+						"ENV_VAR": "value",
+					},
+					MetaData: map[string]string{
+						"meta_key": "meta_value",
+					},
 				}, &buildkite.Response{
 					Response: &http.Response{
 						StatusCode: 201,
@@ -420,11 +426,17 @@ func TestCreateBuild(t *testing.T) {
 		Commit:  "abc123",
 		Message: "Test build",
 		Branch:  "main",
+		Environment: []Entry{
+			{Key: "ENV_VAR", Value: "value"},
+		},
+		MetaData: []Entry{
+			{Key: "meta_key", Value: "meta_value"},
+		},
 	}
 
 	result, err := handler(ctx, request, args)
 	assert.NoError(err)
 
 	textContent := getTextResult(t, result)
-	assert.Equal(`{"id":"123","number":1,"state":"created","blocked":false,"author":{},"created_at":"0001-01-01T00:00:00Z","creator":{"avatar_url":"","created_at":null,"email":"","id":"","name":""}}`, textContent.Text)
+	assert.Equal(`{"id":"123","number":1,"state":"created","blocked":false,"author":{},"env":{"ENV_VAR":"value"},"created_at":"0001-01-01T00:00:00Z","meta_data":{"meta_key":"meta_value"},"creator":{"avatar_url":"","created_at":null,"email":"","id":"","name":""}}`, textContent.Text)
 }

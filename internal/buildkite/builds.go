@@ -280,12 +280,19 @@ func GetBuild(ctx context.Context, client BuildsClient) (tool mcp.Tool, handler 
 		}
 }
 
+type Entry struct {
+	Key   string `json:"key"`
+	Value string `json:"value"`
+}
+
 type CreateBuildArgs struct {
 	Org          string
 	PipelineSlug string
 	Commit       string
 	Branch       string
 	Message      string
+	Environment  []Entry
+	MetaData     []Entry
 }
 
 func CreateBuild(ctx context.Context, client BuildsClient) (tool mcp.Tool, handler mcp.TypedToolHandlerFunc[CreateBuildArgs]) {
@@ -311,6 +318,44 @@ func CreateBuild(ctx context.Context, client BuildsClient) (tool mcp.Tool, handl
 				mcp.Required(),
 				mcp.Description("The commit message for the build"),
 			),
+			mcp.WithArray("environment",
+				mcp.Items(
+					map[string]any{
+						"type": "object",
+						"properties": map[string]any{
+							"key": map[string]any{
+								"type":        "string",
+								"description": "The name of the environment variable",
+								"required":    true,
+							},
+							"value": map[string]any{
+								"type":        "string",
+								"description": "The value of the environment variable",
+								"required":    true,
+							},
+						},
+					},
+				),
+				mcp.Description("Environment variables to set for the build")),
+			mcp.WithArray("metadata",
+				mcp.Items(
+					map[string]any{
+						"type": "object",
+						"properties": map[string]any{
+							"key": map[string]any{
+								"type":        "string",
+								"description": "The name of the environment variable",
+								"required":    true,
+							},
+							"value": map[string]any{
+								"type":        "string",
+								"description": "The value of the environment variable",
+								"required":    true,
+							},
+						},
+					},
+				),
+				mcp.Description("Environment variables to set for the build")),
 			mcp.WithToolAnnotation(mcp.ToolAnnotation{
 				Title:        "Create Build",
 				ReadOnlyHint: mcp.ToBoolPtr(false),
@@ -331,9 +376,11 @@ func CreateBuild(ctx context.Context, client BuildsClient) (tool mcp.Tool, handl
 			}
 
 			createBuild := buildkite.CreateBuild{
-				Commit:  args.Commit,
-				Branch:  args.Branch,
-				Message: args.Message,
+				Commit:   args.Commit,
+				Branch:   args.Branch,
+				Message:  args.Message,
+				Env:      convertEntries(args.Environment),
+				MetaData: convertEntries(args.MetaData),
 			}
 
 			span.SetAttributes(
@@ -359,4 +406,16 @@ func CreateBuild(ctx context.Context, client BuildsClient) (tool mcp.Tool, handl
 			}
 			return mcp.NewToolResultText(string(r)), nil
 		}
+}
+
+func convertEntries(entries []Entry) map[string]string {
+	if entries == nil {
+		return nil
+	}
+
+	result := make(map[string]string, len(entries))
+	for _, entry := range entries {
+		result[entry.Key] = entry.Value
+	}
+	return result
 }

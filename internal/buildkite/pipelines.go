@@ -140,15 +140,16 @@ func GetPipeline(ctx context.Context, client PipelinesClient) (tool mcp.Tool, ha
 }
 
 type CreatePipelineArgs struct {
-	OrgSlug                   string `json:"org_slug"`
-	Name                      string `json:"name"`
-	RepositoryURL             string `json:"repository_url"`
-	ClusterID                 string `json:"cluster_id"`
-	Description               string `json:"description"`
-	Configuration             string `json:"configuration"`
-	DefaultBranch             string `json:"default_branch"`               // Optional, if not provided, the default branch will be used
-	SkipQueuedBranchBuilds    bool   `json:"skip_queued_branch_builds"`    // Optional, if not provided, the default value will be used
-	CancelRunningBranchBuilds bool   `json:"cancel_running_branch_builds"` // Optional, if not provided, the default value will be used
+	OrgSlug                   string
+	Name                      string
+	RepositoryURL             string
+	ClusterID                 string
+	Description               string
+	Configuration             string
+	DefaultBranch             string
+	SkipQueuedBranchBuilds    bool
+	CancelRunningBranchBuilds bool
+	Tags                      []string
 }
 
 func CreatePipeline(ctx context.Context, client PipelinesClient) (tool mcp.Tool, handler mcp.TypedToolHandlerFunc[CreatePipelineArgs]) {
@@ -185,6 +186,13 @@ func CreatePipeline(ctx context.Context, client PipelinesClient) (tool mcp.Tool,
 			),
 			mcp.WithBoolean("cancel_running_branch_builds",
 				mcp.Description("Cancel running builds when new builds are created on the same branch"),
+			),
+			mcp.WithArray("tags",
+				mcp.Description("Tags to apply to the pipeline. These can be used for filtering and organization"),
+				mcp.Items(map[string]any{
+					"type":        "string",
+					"description": "A tag to apply to the pipeline",
+				}),
 			),
 			mcp.WithToolAnnotation(mcp.ToolAnnotation{
 				Title:        "Create Pipeline",
@@ -229,6 +237,7 @@ func CreatePipeline(ctx context.Context, client PipelinesClient) (tool mcp.Tool,
 				CancelRunningBranchBuilds: args.CancelRunningBranchBuilds,
 				SkipQueuedBranchBuilds:    args.SkipQueuedBranchBuilds,
 				Configuration:             args.Configuration,
+				Tags:                      args.Tags,
 			}
 
 			if args.DefaultBranch != "" {
@@ -257,16 +266,17 @@ func CreatePipeline(ctx context.Context, client PipelinesClient) (tool mcp.Tool,
 }
 
 type UpdatePipelineArgs struct {
-	OrgSlug                   string `json:"org_slug"`
-	PipelineSlug              string `json:"pipeline_slug"`
-	Name                      string `json:"name"`
-	RepositoryURL             string `json:"repository_url"`
-	ClusterID                 string `json:"cluster_id"`
-	Description               string `json:"description"`
-	Configuration             string `json:"configuration"`
-	DefaultBranch             string `json:"default_branch"`               // Optional, if not provided, the default branch will be used
-	SkipQueuedBranchBuilds    bool   `json:"skip_queued_branch_builds"`    // Optional, if not provided, the default value will be used
-	CancelRunningBranchBuilds bool   `json:"cancel_running_branch_builds"` // Optional, if not provided, the default value will be used
+	OrgSlug                   string
+	PipelineSlug              string
+	Name                      string
+	RepositoryURL             string
+	ClusterID                 string
+	Description               string
+	Configuration             string
+	DefaultBranch             string
+	SkipQueuedBranchBuilds    bool
+	CancelRunningBranchBuilds bool
+	Tags                      []string `json:"tags"` // Optional, labels to apply to the pipeline
 }
 
 func UpdatePipeline(ctx context.Context, client PipelinesClient) (mcp.Tool, mcp.TypedToolHandlerFunc[UpdatePipelineArgs]) {
@@ -303,6 +313,13 @@ func UpdatePipeline(ctx context.Context, client PipelinesClient) (mcp.Tool, mcp.
 			),
 			mcp.WithBoolean("cancel_running_branch_builds",
 				mcp.Description("Cancel running builds when new builds are created on the same branch"),
+			),
+			mcp.WithArray("tags",
+				mcp.Description("Tags to apply to the pipeline. These can be used for filtering and organization"),
+				mcp.Items(map[string]any{
+					"type":        "string",
+					"description": "A tag to apply to the pipeline",
+				}),
 			),
 			mcp.WithToolAnnotation(mcp.ToolAnnotation{
 				Title:        "Update Pipeline",
@@ -345,6 +362,7 @@ func UpdatePipeline(ctx context.Context, client PipelinesClient) (mcp.Tool, mcp.
 				CancelRunningBranchBuilds: args.CancelRunningBranchBuilds,
 				SkipQueuedBranchBuilds:    args.SkipQueuedBranchBuilds,
 				Configuration:             args.Configuration,
+				Tags:                      args.Tags,
 			}
 			if args.DefaultBranch != "" {
 				update.DefaultBranch = args.DefaultBranch
