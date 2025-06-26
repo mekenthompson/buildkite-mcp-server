@@ -13,6 +13,7 @@ type MockPipelinesClient struct {
 	GetFunc    func(ctx context.Context, org string, pipeline string) (buildkite.Pipeline, *buildkite.Response, error)
 	ListFunc   func(ctx context.Context, org string, opt *buildkite.PipelineListOptions) ([]buildkite.Pipeline, *buildkite.Response, error)
 	CreateFunc func(ctx context.Context, org string, p buildkite.CreatePipeline) (buildkite.Pipeline, *buildkite.Response, error)
+	UpdateFunc func(ctx context.Context, org string, pipeline string, p buildkite.UpdatePipeline) (buildkite.Pipeline, *buildkite.Response, error)
 }
 
 func (m *MockPipelinesClient) Get(ctx context.Context, org string, pipeline string) (buildkite.Pipeline, *buildkite.Response, error) {
@@ -32,6 +33,13 @@ func (m *MockPipelinesClient) List(ctx context.Context, org string, opt *buildki
 func (m *MockPipelinesClient) Create(ctx context.Context, org string, p buildkite.CreatePipeline) (buildkite.Pipeline, *buildkite.Response, error) {
 	if m.CreateFunc != nil {
 		return m.CreateFunc(ctx, org, p)
+	}
+	return buildkite.Pipeline{}, nil, nil
+}
+
+func (m *MockPipelinesClient) Update(ctx context.Context, org string, pipeline string, p buildkite.UpdatePipeline) (buildkite.Pipeline, *buildkite.Response, error) {
+	if m.UpdateFunc != nil {
+		return m.UpdateFunc(ctx, org, pipeline, p)
 	}
 	return buildkite.Pipeline{}, nil, nil
 }
@@ -133,6 +141,7 @@ steps:
 					ID:        "123",
 					Slug:      "test-pipeline",
 					Name:      "Test Pipeline",
+					ClusterID: "abc-123",
 					CreatedAt: &buildkite.Timestamp{},
 				}, &buildkite.Response{
 					Response: &http.Response{
@@ -153,16 +162,70 @@ steps:
 	})
 
 	args := CreatePipelineArgs{
-		OrgSlug:         "org",
-		Name:            "Test Pipeline",
-		RepositoryURL:   "https://example.com/repo.git",
-		Description:     "A test pipeline",
-		Configuration:   testPipelineDefinition,
-		EnvironmentVars: []string{"KEY=VALUE"},
+		OrgSlug:       "org",
+		Name:          "Test Pipeline",
+		ClusterID:     "abc-123",
+		RepositoryURL: "https://example.com/repo.git",
+		Description:   "A test pipeline",
+		Configuration: testPipelineDefinition,
 	}
 
 	result, err := handler(ctx, request, args)
 	assert.NoError(err)
 	textContent := getTextResult(t, result)
-	assert.Equal(`{"id":"123","name":"Test Pipeline","slug":"test-pipeline","created_at":"0001-01-01T00:00:00Z","skip_queued_branch_builds":false,"cancel_running_branch_builds":false,"provider":{"id":"","webhook_url":"","settings":null}}`, textContent.Text)
+	assert.Equal(`{"id":"123","name":"Test Pipeline","slug":"test-pipeline","created_at":"0001-01-01T00:00:00Z","skip_queued_branch_builds":false,"cancel_running_branch_builds":false,"cluster_id":"abc-123","provider":{"id":"","webhook_url":"","settings":null}}`, textContent.Text)
+}
+
+func TestUpdatePipeline(t *testing.T) {
+	assert := require.New(t)
+
+	testPipelineDefinition := `agents:
+  queue: "something"
+env:
+  TEST_ENV_VAR: "value"
+steps: 
+  - command: "echo Hello World"
+	key: "hello_step"
+	label: "Hello Step"
+`
+	ctx := context.Background()
+	client := &MockPipelinesClient{
+		UpdateFunc: func(ctx context.Context, org string, pipeline string, p buildkite.UpdatePipeline) (buildkite.Pipeline, *buildkite.Response, error) {
+
+			assert.Equal(testPipelineDefinition, p.Configuration)
+
+			return buildkite.Pipeline{
+					ID:        "123",
+					Slug:      "test-pipeline",
+					Name:      "Test Pipeline",
+					ClusterID: "abc-123",
+					CreatedAt: &buildkite.Timestamp{},
+				}, &buildkite.Response{
+					Response: &http.Response{
+						StatusCode: 200,
+					},
+				}, nil
+		},
+	}
+
+	tool, handler := UpdatePipeline(ctx, client)
+	assert.NotNil(tool)
+	assert.NotNil(handler)
+	request := createMCPRequest(t, map[string]any{
+		"org":           "org",
+		"pipeline_slug": "test-pipeline",
+	})
+	args := UpdatePipelineArgs{
+		OrgSlug:       "org",
+		PipelineSlug:  "test-pipeline",
+		Name:          "Test Pipeline",
+		ClusterID:     "abc-123",
+		Description:   "A test pipeline",
+		Configuration: testPipelineDefinition,
+		RepositoryURL: "https://example.com/repo.git",
+	}
+	result, err := handler(ctx, request, args)
+	assert.NoError(err)
+	textContent := getTextResult(t, result)
+	assert.Equal(`{"id":"123","name":"Test Pipeline","slug":"test-pipeline","created_at":"0001-01-01T00:00:00Z","skip_queued_branch_builds":false,"cancel_running_branch_builds":false,"cluster_id":"abc-123","provider":{"id":"","webhook_url":"","settings":null}}`, textContent.Text)
 }

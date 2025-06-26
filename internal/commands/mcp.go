@@ -62,11 +62,17 @@ func BuildkiteTools(ctx context.Context, client *gobuildkite.Client) []server.Se
 	tools = addTool(
 		fromTypeTool(buildkite.CreatePipeline(ctx, client.Pipelines)),
 	)
+	tools = addTool(
+		fromTypeTool(buildkite.UpdatePipeline(ctx, client.Pipelines)),
+	)
 
 	// Build tools
 	tools = addTool(buildkite.ListBuilds(ctx, client.Builds))
 	tools = addTool(buildkite.GetBuild(ctx, client.Builds))
 	tools = addTool(buildkite.GetBuildTestEngineRuns(ctx, client.Builds))
+	tools = addTool(
+		fromTypeTool(buildkite.CreateBuild(ctx, client.Builds)),
+	)
 
 	// User tools
 	tools = addTool(buildkite.CurrentUser(ctx, client.User))
