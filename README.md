@@ -14,10 +14,12 @@ This is an [Model Context Protocol (MCP)](https://modelcontextprotocol.io/introd
 * `list_cluster_queues` - List all queues in a cluster with their keys, descriptions, dispatch status, and agent configuration
 * `get_pipeline` - Get detailed information about a specific pipeline including its configuration, steps, environment variables, and build statistics
 * `list_pipelines` - List all pipelines in an organization with their basic details, build counts, and current status
-* `create_pipeline` - Create a new pipeline in Buildkite using the provided repository URL. The repository URL must be a valid Git repository URL that is accessible to Buildkite.
+* `create_pipeline` - Create a new pipeline in Buildkite using the provided repository URL. The repository URL must be a valid Git repository URL that is accessible to Buildkite
+* `update_pipeline` - Update an existing pipeline in Buildkite using the provided repository URL. The repository URL must be a valid Git repository URL that is accessible to Buildkite
 * `list_builds` - List all builds for a pipeline with their status, commit information, and metadata
 * `get_build` - Get detailed information about a specific build including its jobs, timing, and execution details
 * `get_build_test_engine_runs` - Get test engine runs data for a specific build in Buildkite. This can be used to look up Test Runs.
+* `create_build` - Create a new build for a pipeline with specified parameters
 * `current_user` - Get details about the user account that owns the API token, including name, email, avatar, and account creation date
 * `user_token_organization` - Get the organization associated with the user token used for this request
 * `get_jobs` - Get all jobs for a specific build including their state, timing, commands, and execution details
