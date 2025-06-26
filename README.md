@@ -1,4 +1,4 @@
-# buildkite-mcp-server
+# buildkite-mcp-server 🚀
 
 [![Build status](https://badge.buildkite.com/79fefd75bc7f1898fb35249f7ebd8541a99beef6776e7da1b4.svg?branch=main)](https://buildkite.com/buildkite/buildkite-mcp-server)
 
@@ -6,7 +6,7 @@
 
 ---
 
-## TL;DR Quick-start
+## ⚡ TL;DR Quick-start
 
 ```bash
 # Requires Docker and a Buildkite API token (see scopes below)
@@ -17,7 +17,7 @@ docker run -it --rm -e BUILDKITE_API_TOKEN=BKUA_xxxxx ghcr.io/buildkite/buildkit
 
 ---
 
-## Table of Contents
+## 🗂️ Table of Contents
 
 - [Prerequisites](#prerequisites)
 - [API Token Scopes](#api-token-scopes)
@@ -32,7 +32,7 @@ docker run -it --rm -e BUILDKITE_API_TOKEN=BKUA_xxxxx ghcr.io/buildkite/buildkit
 
 ---
 
-## Prerequisites
+## 🛠️ Prerequisites
 
 | Requirement | Notes |
 |-------------|-------|
@@ -43,7 +43,7 @@ docker run -it --rm -e BUILDKITE_API_TOKEN=BKUA_xxxxx ghcr.io/buildkite/buildkit
 
 ---
 
-## API Token Scopes
+## 🔑 API Token Scopes
 
 ### Full functionality
 
@@ -72,7 +72,7 @@ docker run -it --rm -e BUILDKITE_API_TOKEN=BKUA_xxxxx ghcr.io/buildkite/buildkit
 
 ---
 
-## Installation
+## 📦 Installation
 
 ### 1. Docker (recommended)
 
@@ -102,7 +102,7 @@ make build    # uses goreleaser (snapshot)
 
 ---
 
-## Configuration & Usage
+## ⚙️ Configuration & Usage
 
 ### Editors & Tools
 
@@ -138,7 +138,6 @@ Local binary:
 }
 ```
 </details>
-
 <details>
 <summary>Goose</summary>
 
@@ -153,7 +152,6 @@ extensions:
     type: stdio
     timeout: 300
 ```
-
 Local:
 
 ```yaml
@@ -168,7 +166,6 @@ extensions:
     timeout: 300
 ```
 </details>
-
 <details>
 <summary>VS Code</summary>
 
@@ -195,7 +192,6 @@ extensions:
 }
 ```
 </details>
-
 <details>
 <summary>Windsurf</summary>
 
@@ -229,7 +225,6 @@ Local binary:
 ```
 
 </details>
-
 <details>
 <summary>Zed</summary>
 
@@ -251,7 +246,7 @@ Local binary:
 
 <a name="tools"></a>
 <a name="features"></a>
-## Tools & Features
+## 🛠️ Tools & Features
 
 | Tool | Description |
 |------|-------------|
@@ -279,7 +274,7 @@ Local binary:
 
 ---
 
-## Screenshots
+## 📸 Screenshots
 
 ![Get Pipeline Tool](docs/images/get_pipeline.png)
 
@@ -287,7 +282,7 @@ Local binary:
 
 ---
 
-## Security
+## 🔒 Security
 
 To ensure the MCP server is run in a secure environment, we recommend running it in a container.
 
@@ -295,7 +290,7 @@ This image is built from [cgr.dev/chainguard/static](https://images.chainguard.d
 
 ---
 
-## Contributing
+## 🤝 Contributing
 
 Development guidelines are in [`DEVELOPMENT.md`](DEVELOPMENT.md).
 
@@ -307,7 +302,7 @@ go test ./...
 
 ---
 
-## License
+## 📝 License
 
 MIT © Buildkite
 
