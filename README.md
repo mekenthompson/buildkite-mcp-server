@@ -138,6 +138,11 @@ Local binary:
 }
 ```
 </details>
+
+## Goose
+
+- For Docker with [Goose](https://block.github.io/goose/) (recommended):
+
 <details>
 <summary>Goose</summary>
 
@@ -225,6 +230,11 @@ Local binary:
 ```
 
 </details>
+
+## Zed
+
+- There is a Zed [editor extension](https://zed.dev) available in the [official extension gallery](https://zed.dev/extensions?query=buildkite). During installation it will ask for an API token which will be added to your settings, or you can manually configure:
+
 <details>
 <summary>Zed</summary>
 
