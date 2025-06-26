@@ -154,7 +154,7 @@ type CreatePipelineArgs struct {
 
 func CreatePipeline(ctx context.Context, client PipelinesClient) (tool mcp.Tool, handler mcp.TypedToolHandlerFunc[CreatePipelineArgs]) {
 	return mcp.NewTool("create_pipeline",
-			mcp.WithDescription("Create a new pipeline in Buildkite using the provided repository URL. The repository URL must be a valid Git repository URL that is accessible to Buildkite"),
+			mcp.WithDescription("Set up a new CI/CD pipeline in Buildkite with YAML configuration, repository connection, and cluster assignment"),
 			mcp.WithString("org_slug",
 				mcp.Required(),
 				mcp.Description("The organization slug for the owner of the pipeline. This is used to determine where to create the pipeline"),
@@ -281,7 +281,7 @@ type UpdatePipelineArgs struct {
 
 func UpdatePipeline(ctx context.Context, client PipelinesClient) (mcp.Tool, mcp.TypedToolHandlerFunc[UpdatePipelineArgs]) {
 	return mcp.NewTool("update_pipeline",
-			mcp.WithDescription("Update an existing pipeline in Buildkite using the provided repository URL. The repository URL must be a valid Git repository URL that is accessible to Buildkite"),
+			mcp.WithDescription("Modify an existing Buildkite pipeline's configuration, repository, settings, or metadata"),
 			mcp.WithString("org_slug",
 				mcp.Required(),
 				mcp.Description("The organization slug for the owner of the pipeline. This is used to determine where to update the pipeline"),
