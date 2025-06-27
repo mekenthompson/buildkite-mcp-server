@@ -260,27 +260,30 @@ Local binary:
 
 | Tool | Description |
 |------|-------------|
-| `get_cluster` | Detailed cluster info (name, default queue, config) |
-| `list_clusters` | List clusters in an organisation |
-| `get_cluster_queue` | Details about a specific queue |
-| `list_cluster_queues` | List queues in a cluster |
-| `get_pipeline` | Detailed pipeline config, steps & stats |
-| `list_pipelines` | List all pipelines in an organisation |
-| `list_builds` | List builds for a pipeline |
-| `get_build` | Detailed build info including jobs |
-| `get_build_test_engine_runs` | Test Engine runs for a build |
-| `current_user` | Authenticated user info |
-| `user_token_organization` | Organisation linked to token |
-| `get_jobs` | List jobs for a build |
-| `get_job_logs` | Raw log output for a job |
-| `list_artifacts` | List artifacts across jobs |
-| `get_artifact` | Detailed artifact metadata |
-| `list_annotations` | List build annotations |
-| `list_test_runs` | Test runs for a suite |
-| `get_test_run` | Details of a test run |
-| `get_failed_executions` | Failed test executions (with stack traces) |
-| `get_test` | Test metadata (for failed executions) |
-| `access_token` | Information about the current API token |
+| `get_cluster` | Get detailed information about a specific cluster including its name, description, default queue, and configuration |
+| `list_clusters` | List all clusters in an organization with their names, descriptions, default queues, and creation details |
+| `get_cluster_queue` | Get detailed information about a specific queue including its key, description, dispatch status, and hosted agent configuration |
+| `list_cluster_queues` | List all queues in a cluster with their keys, descriptions, dispatch status, and agent configuration |
+| `get_pipeline` | Get detailed information about a specific pipeline including its configuration, steps, environment variables, and build statistics |
+| `list_pipelines` | List all pipelines in an organization with their basic details, build counts, and current status |
+| `create_pipeline` | Set up a new CI/CD pipeline in Buildkite with YAML configuration, repository connection, and cluster assignment |
+| `update_pipeline` | Modify an existing Buildkite pipeline's configuration, repository, settings, or metadata |
+| `list_builds` | List all builds for a pipeline with their status, commit information, and metadata |
+| `get_build` | Get detailed information about a specific build including its jobs, timing, and execution details |
+| `get_build_test_engine_runs` | Get test engine runs data for a specific build in Buildkite. This can be used to look up Test Runs. |
+| `create_build` | Trigger a new build on a Buildkite pipeline for a specific commit and branch, with optional environment variables, metadata, and author information |
+| `current_user` | Get details about the user account that owns the API token, including name, email, avatar, and account creation date |
+| `user_token_organization` | Get the organization associated with the user token used for this request |
+| `get_jobs` | Get all jobs for a specific build including their state, timing, commands, and execution details |
+| `get_job_logs` | Get the log output and metadata for a specific job, including content, size, and header timestamps |
+| `list_artifacts` | List all artifacts for a build across all jobs, including file details, paths, sizes, MIME types, and download URLs |
+| `get_artifact` | Get detailed information about a specific artifact including its metadata, file size, SHA-1 hash, and download URL |
+| `list_annotations` | List all annotations for a build, including their context, style (success/info/warning/error), rendered HTML content, and creation timestamps |
+| `list_test_runs` | List all test runs for a test suite in Buildkite Test Engine |
+| `get_test_run` | Get a specific test run in Buildkite Test Engine |
+| `get_failed_executions` | Get failed test executions for a specific test run in Buildkite Test Engine. Optionally get the expanded failure details such as full error messages and stack traces. |
+| `get_test` | Get a specific test in Buildkite Test Engine. This provides additional metadata for failed test executions |
+| `access_token` | Get information about the current API access token including its scopes and UUID |
 
 ---
 
